@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import PublicLayout from "./layouts/PublicLayout";
 import HomePage from "./features/home/HomePage";
@@ -21,7 +21,7 @@ import DoctorsPage from "./features/admin/doctors/DoctorsPage";
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
@@ -49,7 +49,7 @@ function App() {
       </Routes>
 
       
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
