@@ -1,8 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { MedicalTest } from '../data/tests';
 
-export type BillItem = MedicalTest;
+export interface BillItem {
+  id: string;
+  name: string;
+  price: number;
+}
 
 export interface Bill {
   id: string;

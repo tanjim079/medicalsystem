@@ -14,6 +14,7 @@ import jsPDF from "jspdf";
 
 export default function TestBilling() {
   const [patientId, setPatientId] = useState("");
+  const [patientType, setPatientType] = useState<"Student" | "Employee">("Student");
   const [selectedTests, setSelectedTests] = useState<MedicalTest[]>([]);
   const [discount, setDiscount] = useState<number>(0);
   const [tax, setTax] = useState<number>(0);
@@ -27,7 +28,9 @@ export default function TestBilling() {
 
   const patient = mockPatients.find((p) => p.universityId.toLowerCase() === patientId.toLowerCase());
 
-  const subTotal = selectedTests.reduce((sum, test) => sum + test.price, 0);
+  const getTestPrice = (test: MedicalTest) => patientType === "Student" ? test.studentPrice : test.employeePrice;
+
+  const subTotal = selectedTests.reduce((sum, test) => sum + getTestPrice(test), 0);
   const taxAmount = (subTotal * tax) / 100;
   const totalAmount = subTotal + taxAmount - discount;
 
@@ -56,10 +59,16 @@ export default function TestBilling() {
       return;
     }
 
+    const billItems = selectedTests.map(t => ({
+      id: t.id,
+      name: t.name,
+      price: getTestPrice(t)
+    }));
+
     const bill = addBill({
       patientId: patient.universityId,
       patientName: patient.name,
-      tests: selectedTests,
+      tests: billItems,
       subTotal,
       discount,
       tax,
@@ -127,6 +136,33 @@ export default function TestBilling() {
                   />
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Patient Type (Pricing)</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="patientType" 
+                      value="Student" 
+                      checked={patientType === "Student"} 
+                      onChange={(e) => setPatientType(e.target.value as "Student" | "Employee")}
+                    />
+                    <span>Student</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="radio" 
+                      name="patientType" 
+                      value="Employee" 
+                      checked={patientType === "Employee"} 
+                      onChange={(e) => setPatientType(e.target.value as "Student" | "Employee")}
+                    />
+                    <span>Employee</span>
+                  </label>
+                </div>
+              </div>
+
               {patient ? (
                 <div className="bg-green-50 text-green-800 p-3 rounded-lg text-sm">
                   <strong>Name:</strong> {patient.name} <br />
@@ -151,7 +187,7 @@ export default function TestBilling() {
                 <option value="" disabled>Select a medical test to add...</option>
                 {medicalTests.map((t) => (
                   <option key={t.id} value={t.id}>
-                    {t.name} - ৳{t.price}
+                    {t.name} - ৳{getTestPrice(t)}
                   </option>
                 ))}
               </select>
@@ -162,7 +198,7 @@ export default function TestBilling() {
                   <div key={t.id} className="flex justify-between items-center p-2 bg-gray-50 rounded border">
                     <span className="text-sm font-medium">{t.name}</span>
                     <div className="flex items-center gap-3 text-sm">
-                      <span className="font-semibold">৳{t.price}</span>
+                      <span className="font-semibold">৳{getTestPrice(t)}</span>
                       <button aria-label="Remove Test" onClick={() => handleRemoveTest(t.id)} className="text-red-500 hover:text-red-700">
                         <Trash2 size={16} />
                       </button>
