@@ -32,7 +32,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
         <Link to="/" className="flex items-center gap-3">
           {/* <img src="/ruet-logo.png" alt="RUET Logo" className="h-10" /> */}
           <div className="bg-white text-white p-2 rounded-lg font-bold text-xl leading-none">
-            <img src="/ruet-logo.png" alt="RUET Logo" className="h-9" />
+            <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="RUET Logo" className="h-9" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-blue-900 leading-tight">RUET Medical</h1>

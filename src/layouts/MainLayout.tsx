@@ -53,7 +53,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-50 bg-white shadow-sm border-b px-6 py-4 flex justify-between items-center relative print:hidden">
         <Link to="/" className="flex items-center gap-3">
           <div className="bg-white text-white p-2 rounded-lg font-bold text-xl leading-none">
-            <img src="/ruet-logo.png" alt="RUET Logo" className="h-8" />
+            <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="RUET Logo" className="h-8" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-blue-900 leading-tight">RUET Medical</h1>

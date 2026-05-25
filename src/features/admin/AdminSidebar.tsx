@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 export default function AdminSidebar() {
   return (
     <aside className="w-64 bg-[#0f172a] text-white p-5 space-y-4">
-      <img src="/ruet-logo.png" alt="RUET Logo" className="h-25" />
+      <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="RUET Logo" className="h-24" />
       <h2 className="text-xl font-bold mb-6">Admin Panel</h2>
 
       <nav className="flex flex-col gap-2">
