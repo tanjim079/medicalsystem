@@ -4,13 +4,13 @@ import { Check, X, Calendar, Clock, User } from 'lucide-react';
 
 export default function AppointmentRequests() {
   const user = useAuthStore((s) => s.user);
-  const getAppointmentsByDoctor = useAppointmentStore((s) => s.getAppointmentsByDoctor);
+  const appointments = useAppointmentStore((s) => s.appointments);
   const updateAppointmentStatus = useAppointmentStore((s) => s.updateAppointmentStatus);
 
   if (!user || user.role !== 'doctor') return null;
 
-  const appointments = getAppointmentsByDoctor(user.id);
-  const pendingAppointments = appointments.filter((app) => app.status === 'pending');
+  const myAppointments = appointments.filter((app) => app.doctorId === user.id);
+  const pendingAppointments = myAppointments.filter((app) => app.status === 'pending');
 
   if (pendingAppointments.length === 0) {
     return (
