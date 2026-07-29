@@ -114,7 +114,7 @@ export default function PrescriptionPage() {
                 Prescription for {id}
             </h1>
 
-            <div className="grid grid-cols-2 gap-6 print:block">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:block">
 
                 {/* LEFT: FORM */}
                 <div className="print:hidden">
@@ -214,7 +214,7 @@ export default function PrescriptionPage() {
                         </div>
 
                         {/* Patient Info */}
-                        <div className="grid grid-cols-2 gap-y-2 text-sm border-b pb-4 mb-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 text-sm border-b pb-4 mb-6">
                             <div>
                                 <p><span className="text-gray-500 font-medium">Patient Name:</span> <span className="font-semibold text-gray-800">{patient?.name || "Unknown"}</span></p>
                             </div>

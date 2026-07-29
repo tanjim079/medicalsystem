@@ -99,7 +99,7 @@ export default function MedicineDispense() {
                     </span>
                   </div>
                   
-                  <div className="mt-4 grid grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-lg">
+                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm bg-gray-50 p-4 rounded-lg">
                     <div>
                       <p className="text-gray-500 font-medium">Patient ID</p>
                       <p className="font-bold">{selectedPrescription.patientId}</p>

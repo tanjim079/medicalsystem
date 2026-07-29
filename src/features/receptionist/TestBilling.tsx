@@ -215,7 +215,7 @@ export default function TestBilling() {
           <Card className={generatedBill ? "opacity-50 pointer-events-none" : ""}>
             <h2 className="text-lg font-bold mb-4 border-b pb-2">Payment Details</h2>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Discount (৳)</label>
                   <Input
@@ -236,7 +236,7 @@ export default function TestBilling() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
                   <select

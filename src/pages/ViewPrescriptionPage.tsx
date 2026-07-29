@@ -71,7 +71,7 @@ export default function ViewPrescriptionPage() {
                         </div>
 
                         {/* Patient Info */}
-                        <div className="grid grid-cols-2 gap-y-2 text-sm border-b pb-4 mb-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 text-sm border-b pb-4 mb-6">
                             <div>
                                 <p><span className="text-gray-500 font-medium">Patient Name:</span> <span className="font-semibold text-gray-800">{patient?.name || "Unknown"}</span></p>
                             </div>

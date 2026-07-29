@@ -19,7 +19,7 @@ export default function StudentProfile({ patient }: StudentProfileProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
           <Droplet className="text-red-500" size={20} />
           <div>

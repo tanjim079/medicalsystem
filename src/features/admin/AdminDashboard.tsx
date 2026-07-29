@@ -31,7 +31,7 @@ export default function AdminDashboard() {
       </h1>
 
       {/* 🔷 Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <Card>
           <p className="text-sm text-gray-500">Total Doctors</p>
           <p className="text-xl font-bold">{doctors.length}</p>
@@ -50,7 +50,7 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* 👨‍⚕️ Doctor Management */}
         <Card>
