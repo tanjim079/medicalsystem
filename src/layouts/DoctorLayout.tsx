@@ -14,7 +14,7 @@ export default function DoctorLayout() {
 
   const navItems = [
     { name: "Dashboard", path: "/doctor", icon: <LayoutDashboard size={18} />, end: true },
-    { name: "Serial Requests", path: "/doctor/requests", icon: <CalendarClock size={18} /> },
+    { name: "Appointments", path: "/doctor/appointments", icon: <CalendarClock size={18} /> },
     { name: "Consultancy", path: "/doctor/consultancy", icon: <UserPlus size={18} /> },
   ];
 

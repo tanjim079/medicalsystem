@@ -30,7 +30,6 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
     navLinks = [
       { name: "Dashboard", path: "/receptionist" },
       { name: "Patients", path: "/receptionist/patients" },
-      { name: "Appointments", path: "/receptionist/appointments" },
       { name: "Billing", path: "/receptionist/billing" },
       { name: "Pharmacy", path: "/receptionist/pharmacy" },
       { name: "Doctors", path: "/doctors" },

@@ -11,5 +11,5 @@ export interface Appointment {
   symptoms: string;
   status: AppointmentStatus;
   createdAt: string;
-  tokenNumber?: string;
+  serialNumber?: string;
 }
