@@ -16,6 +16,8 @@ export interface Prescription {
     date: string;
     problem: string;
     medicines: PrescriptionMedicine[];
+    tests: { id: string; name: string }[];
+    advice: string;
     status: 'pending' | 'dispensed';
 }
 
