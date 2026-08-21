@@ -9,7 +9,6 @@ import StudentDashboard from "./features/student/StudentDashboard";
 import DoctorDashboard from "./features/doctor/DoctorDashboard";
 import ReceptionistDashboard from "./features/receptionist/ReceptionistDashboard";
 import PatientManagement from "./features/receptionist/PatientManagement";
-import AppointmentManagement from "./features/receptionist/AppointmentManagement";
 import TestBilling from "./features/receptionist/TestBilling";
 import MedicineDispense from "./features/receptionist/MedicineDispense";
 import PrescriptionPage from "./pages/PrescriptionPage";
@@ -18,6 +17,9 @@ import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./features/admin/AdminDashboard";
 import MedicinesPage from "./features/admin/medicines/MedicinesPage";
 import DoctorsPage from "./features/admin/doctors/DoctorsPage";
+import DoctorLayout from "./layouts/DoctorLayout";
+import AppointmentsPage from "./features/doctor/AppointmentsPage";
+import ConsultancyPage from "./features/doctor/ConsultancyPage";
 
 function App() {
   return (
@@ -29,26 +31,31 @@ function App() {
         <Route path="/staff" element={<PublicLayout><PublicStaffPage /></PublicLayout>} />
         <Route path="/tests" element={<PublicLayout><PublicTestsPage /></PublicLayout>} />
         <Route path="/login" element={<PublicLayout><LoginPage /></PublicLayout>} />
-        
+
         {/* Protected Dashboard Routes (No public layout for these) */}
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/doctor" element={<DoctorDashboard />} />
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/receptionist" element={<ReceptionistDashboard />} />
         <Route path="/receptionist/patients" element={<PatientManagement />} />
-        <Route path="/receptionist/appointments" element={<AppointmentManagement />} />
+
         <Route path="/receptionist/billing" element={<TestBilling />} />
         <Route path="/receptionist/pharmacy" element={<MedicineDispense />} />
         <Route path="/prescription/:id" element={<PrescriptionPage />} />
         <Route path="/prescription/view/:prescriptionId" element={<ViewPrescriptionPage />} />
+
         <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<AdminDashboard />} />
-        <Route path="medicines" element={<MedicinesPage />} />
-        <Route path="doctors" element={<DoctorsPage />} />
-      </Route>
+          <Route index element={<AdminDashboard />} />
+          <Route path="medicines" element={<MedicinesPage />} />
+          <Route path="doctors" element={<DoctorsPage />} />
+        </Route>
+
+        <Route path="/doctor" element={<DoctorLayout />}>
+          <Route index element={<DoctorDashboard />} />
+          <Route path="appointments" element={<AppointmentsPage />} />
+          <Route path="consultancy" element={<ConsultancyPage />} />
+        </Route>
       </Routes>
 
-      
+
     </HashRouter>
   );
 }

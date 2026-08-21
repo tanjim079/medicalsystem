@@ -16,7 +16,7 @@ export default function DoctorOverview({ onSelectPatient }: Props) {
   // Filter for today's data relevant to this doctor
   const myAppointments = appointments.filter(a => a.doctorId === user?.id);
   const pendingRequests = myAppointments.filter(a => a.status === 'pending');
-  const upcomingAppointments = myAppointments.filter(a => a.status === 'accepted' || a.status === 'pending');
+  const upcomingAppointments = myAppointments.filter(a => a.status === 'accepted');
   
   const myPrescriptions = prescriptions.filter(p => p.doctorId === user?.id);
 
@@ -78,7 +78,7 @@ export default function DoctorOverview({ onSelectPatient }: Props) {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b bg-gray-50 text-sm text-gray-600">
-                <th className="p-3 font-semibold">Token</th>
+                <th className="p-3 font-semibold">Serial Number</th>
                 <th className="p-3 font-semibold">Patient</th>
                 <th className="p-3 font-semibold">Date & Time</th>
                 <th className="p-3 font-semibold">Status</th>
@@ -91,7 +91,7 @@ export default function DoctorOverview({ onSelectPatient }: Props) {
                   <tr key={app.id} className="border-b last:border-0 hover:bg-gray-50 transition-colors">
                     <td className="p-3">
                       <span className="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                        {app.tokenNumber || "N/A"}
+                        {app.serialNumber || "N/A"}
                       </span>
                     </td>
                     <td className="p-3 font-medium text-gray-800">{app.patientName}</td>

@@ -79,6 +79,9 @@ export default function AppointmentsList() {
                     <Clock size={16} />
                     {app.time}
                   </div>
+                  <div className="flex items-center gap-1 font-mono font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-100">
+                    {app.serialNumber || 'N/A'}
+                  </div>
                 </div>
 
                 <div className="text-sm text-gray-700 bg-gray-50 p-2 rounded">

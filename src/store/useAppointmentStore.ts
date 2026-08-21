@@ -15,11 +15,19 @@ export const useAppointmentStore = create<AppointmentState>()(
     (set, get) => ({
       appointments: [],
       addAppointment: (appointmentData) => {
+        const todayIsoStr = new Date().toISOString().split('T')[0];
+        const todayStr = todayIsoStr.replace(/-/g, '');
+        const todaysAppointments = get().appointments.filter(app => app.createdAt.startsWith(todayIsoStr));
+        const nextSerial = todaysAppointments.length + 1;
+        const formattedSerial = nextSerial.toString().padStart(3, '0');
+        const serialNumber = `APT-${todayStr}-${formattedSerial}`;
+
         const newAppointment: Appointment = {
           ...appointmentData,
           id: Math.random().toString(36).substring(2, 9),
           status: 'pending',
           createdAt: new Date().toISOString(),
+          serialNumber: appointmentData.serialNumber || serialNumber,
         };
         set((state) => ({
           appointments: [...state.appointments, newAppointment],

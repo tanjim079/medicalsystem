@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import MainLayout from "../../layouts/MainLayout";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
@@ -13,9 +14,14 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 export default function TestBilling() {
-  const [patientId, setPatientId] = useState("");
+  const location = useLocation();
+  const prefillData = location.state as { patientId: string, tests: { id: string, name: string }[] } | null;
+
+  const [patientId, setPatientId] = useState(prefillData?.patientId || "");
   const [patientType, setPatientType] = useState<"Student" | "Employee">("Student");
-  const [selectedTests, setSelectedTests] = useState<MedicalTest[]>([]);
+  const [selectedTests, setSelectedTests] = useState<MedicalTest[]>(
+    prefillData?.tests?.map(t => medicalTests.find(mt => mt.id === t.id)).filter(Boolean) as MedicalTest[] || []
+  );
   const [discount, setDiscount] = useState<number>(0);
   const [tax, setTax] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<"Cash" | "Card" | "Mobile Banking">("Cash");

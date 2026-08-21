@@ -15,7 +15,7 @@ export default function ViewPrescriptionPage() {
 
     const prescriptions = usePrescriptionStore((s) => s.prescriptions);
     const prescription = prescriptions.find(p => p.id === prescriptionId);
-    
+
     // Find patient data based on patientId in the prescription
     const patient = mockPatients.find((p) => p.universityId.toLowerCase() === prescription?.patientId.toLowerCase());
 
@@ -61,76 +61,140 @@ export default function ViewPrescriptionPage() {
                 <Card>
                     <div
                         ref={printRef}
-                        className="print-area bg-white p-6 rounded text-sm"
+                        className="print-area bg-white p-8 rounded-sm shadow-md text-sm print:shadow-none print:p-0 relative"
                     >
-                        {/* Header */}
-                        <div className="text-center border-b-2 border-blue-600 pb-4 mb-6">
-                            <h2 className="text-2xl font-bold text-blue-800 uppercase tracking-wide">RUET Medical Center</h2>
-                            <p className="text-sm text-gray-600 font-medium">Rajshahi University of Engineering & Technology</p>
-                            <p className="text-xs text-gray-500">Kazla, Rajshahi-6204, Bangladesh</p>
+                        {/* Watermark */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04] z-0 print:opacity-[0.04]">
+                            <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="Watermark" className="w-2/3 max-w-[500px] object-contain" />
                         </div>
 
-                        {/* Patient Info */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 text-sm border-b pb-4 mb-6">
-                            <div>
-                                <p><span className="text-gray-500 font-medium">Patient Name:</span> <span className="font-semibold text-gray-800">{patient?.name || "Unknown"}</span></p>
+                        {/* Content Wrapper */}
+                        <div className="relative z-10 flex flex-col h-full min-h-[800px]">
+                            {/* Header */}
+                            <div className="grid grid-cols-[auto_1fr_auto] items-center border-b-2 border-blue-800 pb-4 mb-6">
+                                <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="RUET Logo" className="w-20 h-20 object-contain" />
+                                <div className="text-center">
+                                    <h2 className="text-2xl font-bold text-blue-900 uppercase tracking-wide">RUET Medical Center</h2>
+                                    <p className="text-sm text-gray-700 font-medium">Rajshahi University of Engineering & Technology</p>
+                                    <p className="text-xs text-gray-500 mt-0.5">Kazla, Rajshahi-6204, Bangladesh</p>
+                                </div>
+                                <div className="w-20"></div> {/* Spacer to maintain perfect center alignment */}
                             </div>
-                            <div className="text-right">
-                                <p><span className="text-gray-500 font-medium">Date:</span> <span className="font-semibold text-gray-800">{new Date(prescription.date).toLocaleDateString()}</span></p>
-                            </div>
-                            <div>
-                                <p><span className="text-gray-500 font-medium">Student ID:</span> <span className="font-semibold text-gray-800">{prescription.patientId}</span></p>
-                            </div>
-                            <div className="text-right">
-                                <p><span className="text-gray-500 font-medium">Age:</span> <span className="font-semibold text-gray-800">{patient?.age || "N/A"} Years</span></p>
-                            </div>
-                        </div>
 
-                        {/* Problem */}
-                        <div className="mb-6">
-                            <p className="font-semibold text-blue-800 mb-2 border-b border-gray-100 pb-1">Clinical Diagnosis:</p>
-                            <p className="p-3 bg-gray-50 rounded-lg text-gray-700 min-h-[60px] italic">
-                                {prescription.problem || "No diagnosis recorded."}
-                            </p>
-                        </div>
+                            {/* Patient Info */}
+                            <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm border-b border-gray-200 pb-4 mb-6">
+                                <div className="flex bg-gray-50/50 p-2 rounded">
+                                    <span className="text-gray-500 font-medium w-24">Patient Name:</span>
+                                    <span className="font-semibold text-gray-800">{patient?.name || "Unknown"}</span>
+                                </div>
+                                <div className="flex bg-gray-50/50 p-2 rounded">
+                                    <span className="text-gray-500 font-medium w-24">Date:</span>
+                                    <span className="font-semibold text-gray-800">{new Date(prescription.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+                                </div>
+                                <div className="flex bg-gray-50/50 p-2 rounded">
+                                    <span className="text-gray-500 font-medium w-24">Student ID:</span>
+                                    <span className="font-semibold text-gray-800">{prescription.patientId}</span>
+                                </div>
+                                <div className="flex bg-gray-50/50 p-2 rounded">
+                                    <span className="text-gray-500 font-medium w-24">Age:</span>
+                                    <span className="font-semibold text-gray-800">{patient?.age || "N/A"} Years</span>
+                                </div>
+                            </div>
 
-                        {/* Rx Symbol */}
-                        <div className="mb-4 text-4xl font-serif font-bold text-blue-800">℞</div>
+                            {/* Problem */}
+                            <div className="mb-6">
+                                <div className="flex items-center mb-2 border-b border-gray-200 pb-1">
+                                    <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} className="w-5 h-5 mr-2 opacity-80" alt="Logo" />
+                                    <h3 className="font-semibold text-blue-900">Clinical Diagnosis</h3>
+                                </div>
+                                <div className="p-3 bg-white border border-gray-200 rounded-md text-gray-700 min-h-[60px]">
+                                    {prescription.problem || "No diagnosis recorded."}
+                                </div>
+                            </div>
 
-                        {/* Medicines */}
-                        <div className="space-y-4 min-h-[200px]">
-                            {prescription.medicines.length === 0 ? (
-                                <p className="text-gray-400 italic text-center mt-10">No medicines prescribed</p>
-                            ) : (
-                                prescription.medicines.map((m, i) => (
-                                    <div key={i} className="flex justify-between items-center border-b border-dashed border-gray-200 pb-2">
-                                        <div>
-                                            <span className="font-bold text-gray-800 text-base">
-                                                {i + 1}. {m.name}
-                                            </span>
+                            {/* Rx Symbol */}
+                            <div className="mb-4 flex items-center">
+                                <span className="text-4xl font-serif font-bold text-blue-900">℞</span>
+                            </div>
+
+                            {/* Medicines */}
+                            <div className={`space-y-3 ${prescription.medicines.length > 0 ? 'min-h-[150px]' : ''}`}>
+                                {prescription.medicines.length === 0 && (!prescription.tests || prescription.tests.length === 0) && !prescription.advice ? (
+                                    <p className="text-gray-400 italic text-center mt-10">No medicines prescribed</p>
+                                ) : (
+                                    prescription.medicines.map((m, i) => (
+                                        <div key={i} className="flex justify-between items-start mb-3 group">
+                                            <div className="flex gap-2">
+                                                <span className="font-bold text-gray-800">{i + 1}.</span>
+                                                <div>
+                                                    <div className="font-bold text-gray-800 text-base">{m.name}</div>
+                                                    <div className="text-sm text-gray-600 mt-1 flex items-center">
+                                                        <span className="font-semibold px-2 py-0.5 bg-blue-50 border border-blue-100 rounded text-blue-900">{m.dosage}</span>
+                                                        <span className="mx-2 text-gray-400">—</span>
+                                                        <span className="text-gray-600 font-medium">{m.days} days</span>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div className="text-right text-sm">
-                                            <span className="font-semibold text-gray-800 bg-blue-50 px-2 py-1 rounded">{m.dosage}</span>
-                                            <span className="text-gray-500 ml-3">× {m.days} days</span>
-                                        </div>
+                                    ))
+                                )}
+                            </div>
+
+                            {/* Diagnostic Tests */}
+                            {prescription.tests && prescription.tests.length > 0 && (
+                                <div className="mt-8">
+                                    <div className="flex items-center mb-3 border-b border-gray-200 pb-1">
+                                        <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} className="w-5 h-5 mr-2 opacity-80" alt="Logo" />
+                                        <h3 className="font-semibold text-blue-900">Recommended Tests</h3>
                                     </div>
-                                ))
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 pl-2">
+                                        {prescription.tests.map((t) => (
+                                            <div key={t.id} className="text-sm text-gray-800 flex items-start">
+                                                <span className="text-blue-600 mr-2 mt-0.5 font-bold">•</span>
+                                                <span className="leading-snug">{t.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             )}
-                        </div>
 
-                        {/* Footer */}
-                        <div className="mt-16 flex justify-between items-end pt-6 border-t border-gray-200">
-                            <div className="text-left">
-                                <div className="border-t border-gray-400 w-40 mb-1"></div>
-                                <p className="text-xs text-gray-500 font-medium text-center">Patient Signature</p>
-                            </div>
+                            {/* Additional Advice */}
+                            {prescription.advice && (
+                                <div className="mt-8">
+                                    <div className="flex items-center mb-2 border-b border-gray-200 pb-1">
+                                        <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} className="w-5 h-5 mr-2 opacity-80" alt="Logo" />
+                                        <h3 className="font-semibold text-blue-900">Doctor's Advice / Suggestions</h3>
+                                    </div>
+                                    <div className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed bg-gray-50 p-4 rounded-md border border-gray-200">
+                                        {prescription.advice}
+                                    </div>
+                                </div>
+                            )}
 
-                            <div className="text-right">
-                                <div className="border-t border-gray-400 w-48 mb-1"></div>
-                                <p className="font-bold text-gray-800 text-center">{prescription.doctorName}</p>
-                                <p className="text-xs text-blue-600 font-medium text-center capitalize">
-                                    Medical Officer
-                                </p>
+                            <div className="mt-auto pt-24 flex-grow flex flex-col justify-end">
+                                {/* Signatures */}
+                                <div className="flex justify-between items-end pb-6">
+                                    <div className="text-center w-48">
+                                        <div className="border-t border-gray-800 w-full mb-2"></div>
+                                        <p className="text-sm text-gray-800 font-semibold">Patient Signature</p>
+                                    </div>
+
+                                    <div className="text-center w-48">
+                                        <div className="border-t border-gray-800 w-full mb-2"></div>
+                                        <p className="font-bold text-gray-800 text-base">{prescription.doctorName}</p>
+                                        <p className="text-xs text-gray-600 font-medium capitalize">
+                                            Medical Officer
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Footer */}
+                                <div className="pt-4 border-t border-gray-300 text-center">
+                                    <p className="text-xs text-gray-600">
+                                        <span className="font-bold text-blue-900">RUET Medical Center</span> | Rajshahi University of Engineering & Technology
+                                    </p>
+                                    <p className="text-[10px] text-gray-400 mt-1">This prescription is electronically generated by RUET Medical Center.</p>
+                                </div>
                             </div>
                         </div>
                     </div>

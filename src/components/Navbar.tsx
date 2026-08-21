@@ -30,10 +30,30 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
     navLinks = [
       { name: "Dashboard", path: "/receptionist" },
       { name: "Patients", path: "/receptionist/patients" },
-      { name: "Appointments", path: "/receptionist/appointments" },
       { name: "Billing", path: "/receptionist/billing" },
       { name: "Pharmacy", path: "/receptionist/pharmacy" },
       { name: "Doctors", path: "/doctors" },
+      { name: "Tests", path: "/tests" },
+    ];
+  } else if (user?.role === "doctor") {
+    navLinks = [
+      { name: "Dashboard", path: "/doctor" },
+      { name: "Doctors", path: "/doctors" },
+      { name: "Staffs", path: "/staff" },
+      { name: "Tests", path: "/tests" },
+    ];
+  } else if (user?.role === "admin") {
+    navLinks = [
+      { name: "Dashboard", path: "/admin" },
+      { name: "Doctors", path: "/doctors" },
+      { name: "Staffs", path: "/staff" },
+      { name: "Tests", path: "/tests" },
+    ];
+  } else if (user?.role === "student") {
+    navLinks = [
+      { name: "Dashboard", path: "/student" },
+      { name: "Doctors", path: "/doctors" },
+      { name: "Staffs", path: "/staff" },
       { name: "Tests", path: "/tests" },
     ];
   }
