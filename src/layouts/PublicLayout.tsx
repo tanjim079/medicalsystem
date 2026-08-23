@@ -19,7 +19,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
           {/* Contact */}
           <div>
             <h2 className="text-white text-lg font-semibold mb-4">
-              Contact RUET Medical
+              Contact RUET Health Complex
             </h2>
             <p className="text-sm text-gray-400 mb-4 leading-relaxed">
               Registrar, Rajshahi University of Engineering & Technology <br />
@@ -72,7 +72,7 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
         </div>
 
         <div className="border-t border-gray-800 text-center py-5 text-sm text-gray-500">
-          © {new Date().getFullYear()} RUET Medical Center. All rights reserved.
+          © {new Date().getFullYear()} RUET Health Complex. All rights reserved.
         </div>
       </footer>
     </div>

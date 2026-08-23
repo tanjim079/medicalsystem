@@ -80,7 +80,7 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
             <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="RUET Logo" className="h-8" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-blue-900 leading-tight">RUET Medical</h1>
+            <h1 className="text-xl font-bold text-blue-900 leading-tight">RUET Health Complex</h1>
             <p className="text-xs text-gray-500 font-medium tracking-wide uppercase">Healthcare Center</p>
           </div>
         </Link>

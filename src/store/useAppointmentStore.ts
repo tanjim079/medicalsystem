@@ -8,6 +8,7 @@ interface AppointmentState {
   updateAppointmentStatus: (id: string, status: AppointmentStatus) => void;
   getAppointmentsByPatient: (patientId: string) => Appointment[];
   getAppointmentsByDoctor: (doctorId: string) => Appointment[];
+  deleteAppointment: (id: string) => void;
 }
 
 export const useAppointmentStore = create<AppointmentState>()(
@@ -45,6 +46,11 @@ export const useAppointmentStore = create<AppointmentState>()(
       },
       getAppointmentsByDoctor: (doctorId) => {
         return get().appointments.filter((app) => app.doctorId === doctorId);
+      },
+      deleteAppointment: (id) => {
+        set((state) => ({
+          appointments: state.appointments.filter((app) => app.id !== id),
+        }));
       },
     }),
     {

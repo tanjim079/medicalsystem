@@ -56,12 +56,20 @@ export default function ConsultancyPage() {
               <PatientDetails patient={selectedPatient} />
               <TreatmentHistory patient={selectedPatient} />
 
-              <button
-                onClick={handlePrescription}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-              >
-                Create Prescription
-              </button>
+              <div className="flex gap-4">
+                <button
+                  onClick={handlePrescription}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition flex-1"
+                >
+                  Create Prescription
+                </button>
+                <button
+                  onClick={() => navigate(`/certificate/create/${selectedPatient.universityId}`)}
+                  className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 transition flex-1"
+                >
+                  Create Certificate
+                </button>
+              </div>
             </div>
 
             {/* RIGHT */}
