@@ -68,7 +68,7 @@ export default function HomePage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Services</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Explore the comprehensive medical services available at RUET Medical Center.
+              Explore the comprehensive medical services available at RUET Health Complex.
             </p>
           </div>
 

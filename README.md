@@ -1,6 +1,6 @@
-# RUET Medical Frontend
+# RUET Health Complex Frontend
 
-This is the frontend application for the RUET Medical Center, built with modern web technologies. It provides an intuitive interface for students, medical staff, and administration to manage appointments, access medical records, and oversee center operations.
+This is the frontend application for the RUET Health Complex, built with modern web technologies. It provides an intuitive interface for students, medical staff, and administration to manage appointments, access medical records, and oversee center operations.
 
 ## 🚀 Tech Stack
 

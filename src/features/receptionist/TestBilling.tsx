@@ -321,7 +321,7 @@ export default function TestBilling() {
                 {/* Invoice Header */}
                 <div className="flex justify-between items-start border-b-2 border-blue-600 pb-4 mb-6">
                   <div>
-                    <h2 className="text-2xl font-bold text-blue-800 uppercase tracking-wide">RUET Medical Center</h2>
+                    <h2 className="text-2xl font-bold text-blue-800 uppercase tracking-wide">RUET Health Complex</h2>
                     <p className="text-sm text-gray-600 font-medium">Rajshahi University of Engineering & Technology</p>
                     <p className="text-xs text-gray-500">Kazla, Rajshahi-6204</p>
                   </div>

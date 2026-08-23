@@ -13,6 +13,8 @@ import TestBilling from "./features/receptionist/TestBilling";
 import MedicineDispense from "./features/receptionist/MedicineDispense";
 import PrescriptionPage from "./pages/PrescriptionPage";
 import ViewPrescriptionPage from "./pages/ViewPrescriptionPage";
+import CreateCertificatePage from "./pages/CreateCertificatePage";
+import ViewCertificatePage from "./pages/ViewCertificatePage";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./features/admin/AdminDashboard";
 import MedicinesPage from "./features/admin/medicines/MedicinesPage";
@@ -20,10 +22,12 @@ import DoctorsPage from "./features/admin/doctors/DoctorsPage";
 import DoctorLayout from "./layouts/DoctorLayout";
 import AppointmentsPage from "./features/doctor/AppointmentsPage";
 import ConsultancyPage from "./features/doctor/ConsultancyPage";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   return (
     <HashRouter>
+      <ScrollToTop />
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<PublicLayout><HomePage /></PublicLayout>} />
@@ -41,6 +45,8 @@ function App() {
         <Route path="/receptionist/pharmacy" element={<MedicineDispense />} />
         <Route path="/prescription/:id" element={<PrescriptionPage />} />
         <Route path="/prescription/view/:prescriptionId" element={<ViewPrescriptionPage />} />
+        <Route path="/certificate/create/:patientId" element={<CreateCertificatePage />} />
+        <Route path="/certificate/view/:certificateId" element={<ViewCertificatePage />} />
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />

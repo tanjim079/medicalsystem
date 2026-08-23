@@ -1,5 +1,5 @@
-import Card from "../../components/ui/Card";
-import { Clock } from "lucide-react";
+
+import { Clock, User } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { usePrescriptionStore } from "../../store/usePrescriptionStore";
 import { Link } from "react-router-dom";
@@ -12,41 +12,71 @@ export default function MedicalHistory() {
   const history = user ? getPrescriptionsByPatient(user.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) : [];
 
   return (
-    <Card>
-      <div className="flex items-center gap-2 mb-4">
-        <Clock className="text-blue-500" size={20} />
-        <h2 className="text-lg font-semibold">Recent Medical History</h2>
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+        <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+          <Clock size={24} />
+        </div>
+        <h2 className="text-xl font-bold text-gray-800 tracking-tight">Recent Medical History</h2>
       </div>
 
-      <div className="space-y-4">
-        {history.map((h) => (
-          <div key={h.id} className="border-b last:border-0 pb-3 last:pb-0">
-            <div className="flex justify-between items-start mb-1">
-              <p className="font-medium text-gray-800">{h.problem || "General Checkup"}</p>
-              <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                {new Date(h.date).toLocaleDateString()}
-              </span>
+      <div className="space-y-6">
+        {history.map((h, index) => (
+          <div key={h.id} className="relative pl-6">
+            {/* Timeline line */}
+            {index !== history.length - 1 && (
+              <div className="absolute top-8 bottom-[-24px] left-[11px] w-px bg-gray-200"></div>
+            )}
+            {/* Timeline dot */}
+            <div className="absolute top-2 left-0 w-[23px] h-[23px] bg-blue-50 border-4 border-white rounded-full shadow-sm flex items-center justify-center">
+              <div className="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
             </div>
-            <p className="text-sm text-gray-600 mb-1">
-              {h.medicines.length > 0
-                ? `Prescribed: ${h.medicines.map((m) => m.name).join(", ")}`
-                : "No medicines prescribed"}
-            </p>
-            <div className="flex justify-between items-center mt-2">
-              <p className="text-xs text-blue-600 font-medium">Consulted: {h.doctorName}</p>
-              <Link
-                to={`/prescription/view/${h.id}`}
-                className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
-              >
-                View & Download
-              </Link>
+
+            <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 hover:border-blue-200 hover:shadow-sm transition-all group">
+              <div className="flex flex-wrap justify-between items-start gap-2 mb-2">
+                <p className="font-bold text-gray-800 text-lg">{h.problem || "General Checkup"}</p>
+                <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-full whitespace-nowrap">
+                  {new Date(h.date).toLocaleDateString(undefined, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}
+                </span>
+              </div>
+              
+              <div className="mb-4">
+                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider text-xs mb-1">Prescribed Medicines</p>
+                <p className="text-sm text-gray-700 font-medium">
+                  {h.medicines.length > 0
+                    ? h.medicines.map((m) => m.name).join(" • ")
+                    : "No medicines prescribed"}
+                </p>
+              </div>
+              
+              <div className="flex flex-wrap justify-between items-center gap-4 mt-2 pt-3 border-t border-gray-200">
+                <div className="flex items-center gap-2">
+                  <div className="bg-gray-200 p-1 rounded text-gray-600">
+                    <User size={14} />
+                  </div>
+                  <p className="text-sm font-semibold text-gray-700">{h.doctorName}</p>
+                </div>
+                <Link
+                  to={`/prescription/view/${h.id}`}
+                  className="text-xs font-semibold bg-white border border-gray-200 text-gray-700 px-4 py-1.5 rounded-lg hover:bg-gray-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"
+                >
+                  View & Download
+                </Link>
+              </div>
             </div>
           </div>
         ))}
         {history.length === 0 && (
-          <p className="text-gray-500 text-sm text-center py-4">No recent history found.</p>
+          <div className="text-center py-10 px-4">
+            <Clock className="mx-auto text-gray-300 mb-3" size={40} />
+            <p className="text-gray-500 font-medium">No recent history found.</p>
+          </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 }

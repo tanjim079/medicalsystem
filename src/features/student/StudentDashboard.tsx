@@ -1,6 +1,7 @@
 import MainLayout from "../../layouts/MainLayout";
 import StudentProfile from "./StudentProfile";
 import MedicalHistory from "./MedicalHistory";
+import MedicalCertificates from "./MedicalCertificates";
 import AppointmentsList from "./AppointmentsList";
 import { useAuthStore } from "../../store/useAuthStore";
 import { mockPatients } from "../../data/mockPatients";
@@ -17,9 +18,17 @@ export default function StudentDashboard() {
 
   return (
     <MainLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Student Dashboard</h1>
-        <p className="text-gray-600">Welcome back, {user?.name}</p>
+      {/* Welcome Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 mb-8 shadow-lg">
+        <div className="relative z-10">
+          <h1 className="text-3xl font-extrabold text-white mb-2">Student Dashboard</h1>
+          <p className="text-blue-100 text-lg">
+            Welcome back, <span className="font-semibold">{user?.name}</span>
+          </p>
+        </div>
+        {/* Decorative background circles */}
+        <div className="absolute top-0 right-0 -mr-8 -mt-8 w-48 h-48 bg-white opacity-10 rounded-full blur-2xl"></div>
+        <div className="absolute bottom-0 right-32 -mb-8 w-32 h-32 bg-blue-300 opacity-20 rounded-full blur-xl"></div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -35,32 +44,42 @@ export default function StudentDashboard() {
             </Card>
           )}
 
-          <Card>
-            <div className="flex items-center gap-2 mb-3">
-              <Info className="text-blue-500" size={20} />
-              <h2 className="font-semibold">Medical Center Info</h2>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 relative overflow-hidden group hover:shadow-md transition-shadow">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -mr-4 -mt-4 transition-transform group-hover:scale-110"></div>
+            
+            <div className="relative z-10 flex items-center gap-3 mb-5">
+              <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+                <Info size={20} />
+              </div>
+              <h2 className="font-bold text-gray-800 text-lg">Health Complex Info</h2>
             </div>
-            <ul className="text-sm text-gray-600 space-y-2">
-              <li>
-                <strong>Hours:</strong> Sat-Thu: 07:30 AM - 10:00 PM
+            
+            <ul className="text-sm text-gray-600 space-y-4 relative z-10">
+              <li className="flex justify-between items-center pb-2 border-b border-gray-50">
+                <span className="font-medium text-gray-700">Hours</span>
+                <span className="text-gray-500">Sat-Thu: 07:30 AM - 10:00 PM</span>
               </li>
-              <li>
-                <strong>Lunch Break:</strong> 1:30 PM - 3:00 PM
+              <li className="flex justify-between items-center pb-2 border-b border-gray-50">
+                <span className="font-medium text-gray-700">Lunch Break</span>
+                <span className="text-gray-500">1:30 PM - 3:00 PM</span>
               </li>
-              <li>
-                <strong className="text-red-500">Friday: Off Day</strong>
+              <li className="flex justify-between items-center pb-2 border-b border-gray-50">
+                <span className="font-medium text-red-500">Friday</span>
+                <span className="text-red-500 bg-red-50 px-2 py-0.5 rounded-md font-medium text-xs">Off Day</span>
               </li>
-              <li>
-                <strong>Ambulance:</strong> 24 Hours
+              <li className="flex justify-between items-center">
+                <span className="font-medium text-gray-700">Ambulance</span>
+                <span className="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md font-medium text-xs">24 Hours</span>
               </li>
             </ul>
-          </Card>
+          </div>
         </div>
 
-        {/* RIGHT COLUMN: Appointments and Medical History */}
+        {/* RIGHT COLUMN: Appointments, Medical History, Certificates */}
         <div className="md:col-span-2 space-y-6">
           <AppointmentsList />
           <MedicalHistory />
+          <MedicalCertificates />
         </div>
       </div>
     </MainLayout>

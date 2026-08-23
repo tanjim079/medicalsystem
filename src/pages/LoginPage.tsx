@@ -60,7 +60,7 @@ export default function LoginPage() {
           </h1>
 
           <p className="text-gray-600 leading-relaxed">
-            On-campus medical center provides primary and basic healthcare
+            On-campus health complex provides primary and basic healthcare
             facilities to students free of charge. For complicated cases,
             patients are referred to specialist consultants.
           </p>
@@ -87,7 +87,7 @@ export default function LoginPage() {
         <div className="flex justify-center">
           <Card>
             <h2 className="text-xl font-semibold mb-4 text-center">
-              RUET Medical Login
+              RUET Health Complex Login
             </h2>
 
             <div className="space-y-4 w-72">
