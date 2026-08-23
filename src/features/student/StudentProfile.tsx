@@ -1,5 +1,4 @@
 import type { Patient } from "../../data/mockPatients";
-import Card from "../../components/ui/Card";
 import { User, Droplet, Phone, Calendar } from "lucide-react";
 
 interface StudentProfileProps {
