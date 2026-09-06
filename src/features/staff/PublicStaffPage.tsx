@@ -1,12 +1,14 @@
-import { Users, BadgeCheck, Phone } from "lucide-react";
+import { Users, BadgeCheck, Phone, Mail } from "lucide-react";
 
 export default function PublicStaffPage() {
   const staffMembers = [
-    { id: "STF001", name: "Rahim Uddin", role: "Senior Nurse", contact: "+8801700000001" },
-    { id: "STF002", name: "Salma Begum", role: "Nurse", contact: "+8801700000002" },
-    { id: "STF003", name: "Kamal Hossain", role: "Lab Technician", contact: "+8801700000003" },
-    { id: "STF004", name: "Tariqul Islam", role: "Ambulance Driver", contact: "+8801700000004" },
-    { id: "OFF001", name: "Officer Ali", role: "Administrative Officer", contact: "+8801700000005" },
+    { id: "STF001", name: "Md. Joynal Abedin", role: "Senior Principal Medical Technologist", contact: "01717-725675", email: "" },
+    { id: "STF002", name: "Mst. Sultana Parvin", role: "Principal Staff Nurse", contact: "01731913528", email: "" },
+    { id: "STF003", name: "Md. Saroar Jahan", role: "Assistant Principal Medical Technologist (Pharmacy)", contact: "01733368146", email: "" },
+    { id: "STF004", name: "Most. Razia Khatun", role: "Staff Nurse", contact: "01775609846", email: "" },
+    { id: "STF005", name: "Md. Amirul Islam", role: "MLSS", contact: "01984584010", email: "" },
+    { id: "STF006", name: "Md. Altab Hossain", role: "Assistant Principal Medical Technologist (Path.)", contact: "01716472060", email: "" },
+    { id: "STF007", name: "Lovely Ara", role: "Assistant Cook", contact: "01751621531", email: "" },
   ];
 
   return (
@@ -28,16 +30,27 @@ export default function PublicStaffPage() {
               <Users size={36} className="text-gray-400" />
             </div>
             <h3 className="text-lg font-bold text-gray-900">{staff.name}</h3>
-            <div className="flex items-center gap-1 text-indigo-600 text-sm font-medium mt-2">
+            <div className="flex items-center justify-center gap-1 text-indigo-600 text-sm font-medium mt-2">
               <BadgeCheck size={16} /> {staff.role}
             </div>
-            
-            <a 
-              href={`tel:${staff.contact}`} 
-              className="mt-6 flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 rounded-full text-sm transition-colors border border-gray-200"
-            >
-              <Phone size={14} /> Contact
-            </a>
+
+            <div className="w-full bg-gray-50 rounded-xl p-4 mt-6 text-left space-y-4">
+              <div>
+                <div className="flex items-center text-sm text-gray-600 mb-1 gap-2">
+                  <Phone size={16} className="text-gray-400" /> <span>Mobile</span>
+                </div>
+                <div className="font-semibold text-gray-800"><a href={`tel:${staff.contact}`} className="hover:text-indigo-600 transition-colors">{staff.contact}</a></div>
+              </div>
+
+              {staff.email && (
+                <div>
+                  <div className="flex items-center text-sm text-gray-600 mb-1 gap-2">
+                    <Mail size={16} className="text-gray-400" /> <span>Email</span>
+                  </div>
+                  <div className="text-sm font-semibold text-gray-800 break-all"><a href={`mailto:${staff.email}`} className="hover:text-indigo-600 transition-colors">{staff.email}</a></div>
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>

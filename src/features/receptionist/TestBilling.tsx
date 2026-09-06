@@ -10,6 +10,8 @@ import type { MedicalTest } from "../../data/tests";
 import { mockPatients } from "../../data/mockPatients";
 import { useBillingStore } from "../../store/useBillingStore";
 import type { Bill } from "../../store/useBillingStore";
+import { useLaboratoryStore } from "../../store/useLaboratoryStore";
+import { useAuthStore } from "../../store/useAuthStore";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -30,6 +32,8 @@ export default function TestBilling() {
   const [generatedBill, setGeneratedBill] = useState<Bill | null>(null);
 
   const addBill = useBillingStore((s) => s.addBill);
+  const addLaboratoryRequest = useLaboratoryStore((s) => s.addRequest);
+  const user = useAuthStore((s) => s.user);
   const printRef = useRef<HTMLDivElement>(null);
 
   const patient = mockPatients.find((p) => p.universityId.toLowerCase() === patientId.toLowerCase());
@@ -81,6 +85,20 @@ export default function TestBilling() {
       totalAmount,
       paymentMethod,
       status,
+    });
+
+    // Automatically send billed tests to the laboratory for the pathologist
+    selectedTests.forEach((test) => {
+      addLaboratoryRequest({
+        patientId: patient.universityId,
+        patientName: patient.name,
+        testId: test.id,
+        testName: test.name,
+        category: test.category,
+        requestedBy: user?.id || "Receptionist",
+        requestedByName: user?.name || "Receptionist",
+        priority: "Routine",
+      });
     });
 
     setGeneratedBill(bill);
@@ -317,86 +335,110 @@ export default function TestBilling() {
             </div>
 
             {generatedBill ? (
-              <div ref={printRef} className="print-area bg-white p-8 border rounded-lg shadow-sm mx-auto max-w-[600px]">
-                {/* Invoice Header */}
-                <div className="flex justify-between items-start border-b-2 border-blue-600 pb-4 mb-6">
-                  <div>
-                    <h2 className="text-2xl font-bold text-blue-800 uppercase tracking-wide">RUET Health Complex</h2>
-                    <p className="text-sm text-gray-600 font-medium">Rajshahi University of Engineering & Technology</p>
-                    <p className="text-xs text-gray-500">Kazla, Rajshahi-6204</p>
-                  </div>
-                  <div className="text-right">
-                    <h1 className="text-2xl font-bold text-gray-300 uppercase">INVOICE</h1>
-                    <p className="font-bold text-gray-800 mt-1">{generatedBill.id}</p>
-                    <p className="text-sm text-gray-500">{new Date(generatedBill.date).toLocaleDateString()}</p>
-                  </div>
+              <div ref={printRef} className="print-area bg-white p-8 rounded-sm shadow-md text-sm print:shadow-none print:p-0 relative mx-auto max-w-[800px]">
+                {/* Watermark */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04] z-0 print:opacity-[0.04]">
+                  <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="Watermark" className="w-2/3 max-w-[500px] object-contain" />
                 </div>
 
-                {/* Patient Info */}
-                <div className="mb-8">
-                  <p className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2">Billed To:</p>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <p className="font-bold text-gray-800 text-lg">{generatedBill.patientName}</p>
-                    <p className="text-sm text-gray-600">Student ID: {generatedBill.patientId}</p>
-                  </div>
-                </div>
-
-                {/* Tests Table */}
-                <table className="w-full text-left mb-8 border-collapse">
-                  <thead>
-                    <tr className="border-b-2 border-gray-200">
-                      <th className="py-2 text-sm font-bold text-gray-600 uppercase">Description</th>
-                      <th className="py-2 text-sm font-bold text-gray-600 uppercase text-right">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {generatedBill.tests.map((t, i) => (
-                      <tr key={i} className="border-b border-gray-100">
-                        <td className="py-3 text-sm text-gray-800">{t.name}</td>
-                        <td className="py-3 text-sm text-gray-800 text-right font-medium">৳{t.price.toFixed(2)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                {/* Summary */}
-                <div className="flex justify-end mb-8">
-                  <div className="w-64 space-y-2 text-sm">
-                    <div className="flex justify-between text-gray-600">
-                      <span>Subtotal:</span>
-                      <span>৳{generatedBill.subTotal.toFixed(2)}</span>
+                {/* Content Wrapper */}
+                <div className="relative z-10 flex flex-col h-full min-h-[800px]">
+                  {/* Invoice Header */}
+                  <div className="flex justify-between items-start border-b-2 border-blue-800 pb-4 mb-6">
+                    <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="RUET Logo" className="w-20 h-20 object-contain" />
+                    <div className="text-center flex-1 mx-4">
+                      <h2 className="text-2xl font-bold text-blue-900 uppercase tracking-wide">RUET Health Complex</h2>
+                      <p className="text-sm text-gray-700 font-medium">Rajshahi University of Engineering & Technology</p>
+                      <p className="text-xs text-gray-500 mt-0.5">Kazla, Rajshahi-6204, Bangladesh</p>
                     </div>
-                    {generatedBill.tax > 0 && (
-                      <div className="flex justify-between text-gray-600">
-                        <span>Tax ({generatedBill.tax}%):</span>
-                        <span>৳{((generatedBill.subTotal * generatedBill.tax) / 100).toFixed(2)}</span>
-                      </div>
-                    )}
-                    {generatedBill.discount > 0 && (
-                      <div className="flex justify-between text-red-500">
-                        <span>Discount:</span>
-                        <span>-৳{generatedBill.discount.toFixed(2)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between border-t-2 border-gray-800 pt-2 text-lg font-bold text-gray-900">
-                      <span>Total:</span>
-                      <span>৳{generatedBill.totalAmount.toFixed(2)}</span>
+                    <div className="text-right w-32">
+                      <h1 className="text-2xl font-bold text-gray-300 uppercase">INVOICE</h1>
+                      <p className="font-bold text-gray-800 mt-1">{generatedBill.id}</p>
+                      <p className="text-xs text-gray-500">{new Date(generatedBill.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                     </div>
                   </div>
-                </div>
 
-                {/* Footer Info */}
-                <div className="border-t pt-4 grid grid-cols-2 text-sm">
-                  <div>
-                    <p className="text-gray-500 font-medium">Payment Method:</p>
-                    <p className="font-bold text-gray-800">{generatedBill.paymentMethod}</p>
+                  {/* Patient Info */}
+                  <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm border-b border-gray-200 pb-4 mb-6">
+                    <div className="flex bg-gray-50/50 p-2 rounded">
+                      <span className="text-gray-500 font-medium w-24">Billed To:</span>
+                      <span className="font-semibold text-gray-800">{generatedBill.patientName}</span>
+                    </div>
+                    <div className="flex bg-gray-50/50 p-2 rounded">
+                      <span className="text-gray-500 font-medium w-24">Student ID:</span>
+                      <span className="font-semibold text-gray-800">{generatedBill.patientId}</span>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-gray-500 font-medium">Payment Status:</p>
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase mt-1
-                      ${generatedBill.status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                      {generatedBill.status}
-                    </span>
+
+                  {/* Tests Table */}
+                  <div className="mb-6 flex-grow">
+                    <div className="flex items-center mb-2 border-b border-gray-200 pb-1">
+                        <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} className="w-5 h-5 mr-2 opacity-80" alt="Logo" />
+                        <h3 className="font-semibold text-blue-900">Billed Items</h3>
+                    </div>
+                    <table className="w-full text-left mb-8 border-collapse mt-4">
+                      <thead>
+                        <tr className="border-b-2 border-gray-200">
+                          <th className="py-2 text-sm font-bold text-gray-600 uppercase">Description</th>
+                          <th className="py-2 text-sm font-bold text-gray-600 uppercase text-right">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {generatedBill.tests.map((t, i) => (
+                          <tr key={i} className="border-b border-gray-100">
+                            <td className="py-3 text-sm text-gray-800">{t.name}</td>
+                            <td className="py-3 text-sm text-gray-800 text-right font-medium">৳{t.price.toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+
+                    {/* Summary */}
+                    <div className="flex justify-end mb-8">
+                      <div className="w-64 space-y-2 text-sm bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div className="flex justify-between text-gray-600">
+                          <span>Subtotal:</span>
+                          <span>৳{generatedBill.subTotal.toFixed(2)}</span>
+                        </div>
+                        {generatedBill.tax > 0 && (
+                          <div className="flex justify-between text-gray-600">
+                            <span>Tax ({generatedBill.tax}%):</span>
+                            <span>৳{((generatedBill.subTotal * generatedBill.tax) / 100).toFixed(2)}</span>
+                          </div>
+                        )}
+                        {generatedBill.discount > 0 && (
+                          <div className="flex justify-between text-red-500">
+                            <span>Discount:</span>
+                            <span>-৳{generatedBill.discount.toFixed(2)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between border-t-2 border-gray-800 pt-2 text-lg font-bold text-gray-900 mt-2">
+                          <span>Total:</span>
+                          <span>৳{generatedBill.totalAmount.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Payment Info */}
+                    <div className="flex justify-end mt-4">
+                        <div className="text-right">
+                          <p className="text-sm text-gray-600 mb-1">Payment Method: <span className="font-semibold text-gray-800">{generatedBill.paymentMethod}</span></p>
+                          <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold uppercase mb-2
+                            ${generatedBill.status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                            {generatedBill.status}
+                          </span>
+                        </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto pt-16 flex-grow flex flex-col justify-end">
+                    {/* Footer */}
+                    <div className="pt-4 border-t border-gray-300 text-center">
+                      <p className="text-xs text-gray-600">
+                        <span className="font-bold text-blue-900">RUET Health Complex</span> | Rajshahi University of Engineering & Technology
+                      </p>
+                      <p className="text-[10px] text-gray-400 mt-1">This invoice is electronically generated by RUET Health Complex.</p>
+                    </div>
                   </div>
                 </div>
               </div>

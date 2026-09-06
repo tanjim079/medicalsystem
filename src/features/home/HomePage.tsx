@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Activity, Clock, ShieldPlus, Users, PhoneCall } from "lucide-react";
+import { siteSettings } from "../../config/siteSettings";
 
 export default function HomePage() {
   return (
@@ -51,7 +52,8 @@ export default function HomePage() {
               <div className="bg-white text-blue-900 p-4 rounded-xl flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-blue-500 uppercase tracking-wider mb-1">Call Now</p>
-                  <p className="font-semibold text-lg">+88-025888-67105</p>
+                  <p className="font-semibold text-lg">{siteSettings.contacts.ambulance.phone1}</p>
+                  <p className="font-semibold text-lg">{siteSettings.contacts.ambulance.phone2}</p>
                 </div>
                 <div className="bg-blue-100 p-3 rounded-full">
                   <PhoneCall size={20} className="text-blue-600" />
@@ -114,6 +116,12 @@ export default function HomePage() {
                 View Available Tests <ArrowRight size={16} />
               </Link>
             </div>
+          </div>
+
+          <div className="mt-12 text-center">
+            <Link to="/services" className="inline-flex items-center gap-2 bg-gray-900 text-white px-8 py-3 rounded-full font-semibold hover:bg-gray-800 transition-all shadow-md hover:shadow-lg">
+              View All Services Details <ArrowRight size={18} />
+            </Link>
           </div>
         </div>
       </section>

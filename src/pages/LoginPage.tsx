@@ -5,13 +5,14 @@ import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import { users } from "../data/users";
 import { useAuthStore } from "../store/useAuthStore";
+import { siteSettings } from "../config/siteSettings";
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const setUser = useAuthStore((s) => s.setUser);
 
   const [role, setRole] = useState<
-    "doctor" | "student" | "teacher" | "officer" | "admin" | "receptionist"
+    "doctor" | "student" | "teacher" | "officer" | "admin" | "receptionist" | "pathologist"
   >("doctor");
 
   const [id, setId] = useState("");
@@ -42,7 +43,9 @@ export default function LoginPage() {
     } else if (user.role === "student") {
       navigate("/student", { replace: true });
     } else if (user.role === "receptionist") {
-      navigate("/receptionist", { replace: true });
+      navigate("/receptionist/patients", { replace: true });
+    } else if (user.role === "pathologist") {
+      navigate("/pathologist/dashboard", { replace: true });
     } else {
       alert(`${user.role} dashboard not implemented yet`);
     }
@@ -68,13 +71,13 @@ export default function LoginPage() {
           <div className="text-gray-700 text-sm space-y-2">
             <p>
               <span className="font-semibold">Service Time:</span><br />
-              Sat–Thu: 07:30AM – 10:00PM <br />
-              Lunch: 1:30PM – 3:00PM <br />
-              <span className="font-semibold">Friday: Off Day</span>
+              {siteSettings.serviceHours.workingDaysShort}: {siteSettings.serviceHours.time} <br />
+              {siteSettings.serviceHours.lunchBreakLabel}: {siteSettings.serviceHours.lunchBreakTime} <br />
+              <span className="font-semibold">{siteSettings.serviceHours.offDayLabel}: {siteSettings.serviceHours.offDayStatus}</span>
             </p>
 
             <p>
-              <span className="font-semibold">Ambulance:</span> 24 hours (Every day)
+              <span className="font-semibold">Ambulance:</span> {siteSettings.contacts.ambulance.phoneCombined} (24 hours)
             </p>
 
             <p>
@@ -111,6 +114,7 @@ export default function LoginPage() {
                   <option value="officer">Officer</option>
                   <option value="admin">Admin</option>
                   <option value="receptionist">Receptionist</option>
+                  <option value="pathologist">Pathologist</option>
                 </select>
               </div>
 
@@ -128,7 +132,7 @@ export default function LoginPage() {
               </div>
 
               <p className="text-xs text-gray-500">
-                Demo IDs: DOC001, RUET001, TCH001, OFF001, ADMIN001, REC001
+                Demo IDs: DOC001, RUET001, TCH001, OFF001, ADMIN001, REC001, PATH001
               </p>
 
               <Button onClick={handleLogin}>

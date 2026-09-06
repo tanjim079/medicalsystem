@@ -1,41 +1,20 @@
-import { UserRound, Clock, Award } from "lucide-react";
+import { UserRound, Phone, Mail, Award } from "lucide-react";
 
 export default function PublicDoctorsPage() {
   const doctors = [
     {
       id: "DOC001",
-      name: "Dr. Ahmed Hossain",
-      specialization: "Chief Medical Officer",
-      time: "10:00 AM – 2:00 PM",
-      days: "Sat - Wed",
+      name: "Dr. Md. Azizul Islam",
+      specialization: "Chief Medical Officer (In-charge)",
+      mobile: "01712-637265",
+      email: "drazizul.ruet@gmail.com",
     },
     {
       id: "DOC002",
-      name: "Dr. Rafid Islam",
-      specialization: "General Physician",
-      time: "08:00 AM – 1:00 PM",
-      days: "Sun - Thu",
-    },
-    {
-      id: "DOC003",
-      name: "Dr. Farhana Yasmin",
-      specialization: "Gynecologist",
-      time: "11:00 AM – 4:00 PM",
-      days: "Mon - Thu",
-    },
-    {
-      id: "DOC004",
-      name: "Dr. Iqbal Mahmud",
-      specialization: "Cardiologist",
-      time: "03:00 PM – 7:00 PM",
-      days: "Sat, Mon, Wed",
-    },
-    {
-      id: "DOC005",
-      name: "Dr. Zaman Ali",
-      specialization: "Dental Surgeon",
-      time: "09:00 AM – 1:00 PM",
-      days: "Sun - Wed",
+      name: "Dr. Farhana Rahman",
+      specialization: "Senior Medical Officer",
+      mobile: "01715204378",
+      email: "farhanarahman.r4@gmail.com",
     },
   ];
 
@@ -63,12 +42,20 @@ export default function PublicDoctorsPage() {
               </div>
             </div>
             
-            <div className="bg-gray-50 rounded-xl p-4 mt-6">
-              <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-                <span className="flex items-center gap-2"><Clock size={16} className="text-gray-400" /> Availability</span>
+            <div className="bg-gray-50 rounded-xl p-4 mt-6 space-y-4">
+              <div>
+                <div className="flex items-center text-sm text-gray-600 mb-1 gap-2">
+                  <Phone size={16} className="text-gray-400" /> <span>Mobile</span>
+                </div>
+                <div className="font-semibold text-gray-800"><a href={`tel:${doc.mobile}`} className="hover:text-blue-600 transition-colors">{doc.mobile}</a></div>
               </div>
-              <div className="font-semibold text-gray-800">{doc.days}</div>
-              <div className="text-sm text-gray-500 mt-1">{doc.time}</div>
+              
+              <div>
+                <div className="flex items-center text-sm text-gray-600 mb-1 gap-2">
+                  <Mail size={16} className="text-gray-400" /> <span>Email</span>
+                </div>
+                <div className="text-sm font-semibold text-gray-800 break-all"><a href={`mailto:${doc.email}`} className="hover:text-blue-600 transition-colors">{doc.email}</a></div>
+              </div>
             </div>
           </div>
         ))}
