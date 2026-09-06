@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { Phone, Mail } from "lucide-react";
 import Navbar from "../components/Navbar";
+import { siteSettings } from "../config/siteSettings";
 
 export default function PublicLayout({ children }: { children: ReactNode }) {
   return (
@@ -26,11 +27,11 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
               Kazla, Rajshahi-6204, Bangladesh.
             </p>
             <div className="space-y-3 text-sm text-gray-400">
-              <a href="tel:+8802588867105" className="flex items-center gap-2 hover:text-white transition-colors">
-                <Phone size={16} className="text-blue-400" /> +88-025888-67105
+              <a href={`tel:${siteSettings.contacts.ambulance.phone1}`} className="flex items-center gap-2 hover:text-white transition-colors">
+                <Phone size={16} className="text-blue-400" /> {siteSettings.contacts.ambulance.phoneCombined}
               </a>
-              <a href="mailto:adsw@ruet.ac.bd" className="flex items-center gap-2 hover:text-white transition-colors">
-                <Mail size={16} className="text-blue-400" /> adsw@ruet.ac.bd
+              <a href={`mailto:${siteSettings.contacts.email}`} className="flex items-center gap-2 hover:text-white transition-colors">
+                <Mail size={16} className="text-blue-400" /> {siteSettings.contacts.email}
               </a>
             </div>
           </div>
@@ -42,16 +43,16 @@ export default function PublicLayout({ children }: { children: ReactNode }) {
             </h2>
             <ul className="text-sm text-gray-400 space-y-3">
               <li className="flex justify-between border-b border-gray-800 pb-2">
-                <span>Saturday – Thursday</span>
-                <span className="text-white">07:30 AM – 10:00 PM</span>
+                <span>{siteSettings.serviceHours.workingDaysLabel}</span>
+                <span className="text-white">{siteSettings.serviceHours.time}</span>
               </li>
               <li className="flex justify-between border-b border-gray-800 pb-2">
-                <span>Lunch Break</span>
-                <span className="text-white">01:30 PM – 03:00 PM</span>
+                <span>{siteSettings.serviceHours.lunchBreakLabel}</span>
+                <span className="text-white">{siteSettings.serviceHours.lunchBreakTime}</span>
               </li>
               <li className="flex justify-between text-red-400 font-medium">
-                <span>Friday</span>
-                <span>Off Day</span>
+                <span>{siteSettings.serviceHours.offDayLabel}</span>
+                <span>{siteSettings.serviceHours.offDayStatus}</span>
               </li>
             </ul>
           </div>

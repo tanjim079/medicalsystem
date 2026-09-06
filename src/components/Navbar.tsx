@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import { Mail, Phone, Menu, X } from "lucide-react";
+import { siteSettings } from "../config/siteSettings";
 
 interface NavbarProps {
   printHidden?: boolean;
@@ -21,6 +22,7 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
 
   let navLinks = [
     { name: "Home", path: "/" },
+    { name: "Services", path: "/services" },
     { name: "Doctors", path: "/doctors" },
     { name: "Staffs", path: "/staff" },
     { name: "Tests", path: "/tests" },
@@ -28,7 +30,6 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
 
   if (user?.role === "receptionist") {
     navLinks = [
-      { name: "Dashboard", path: "/receptionist" },
       { name: "Patients", path: "/receptionist/patients" },
       { name: "Billing", path: "/receptionist/billing" },
       { name: "Pharmacy", path: "/receptionist/pharmacy" },
@@ -56,6 +57,12 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
       { name: "Staffs", path: "/staff" },
       { name: "Tests", path: "/tests" },
     ];
+  } else if (user?.role === "pathologist") {
+    navLinks = [
+      { name: "Dashboard", path: "/pathologist/dashboard" },
+      { name: "Tests", path: "/pathologist/tests" },
+      { name: "Reports", path: "/pathologist/reports" },
+    ];
   }
 
   const printClass = printHidden ? "print:hidden" : "";
@@ -65,8 +72,8 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
       {/* 🔷 Top Contact Bar */}
       <div className={`bg-blue-600 text-white text-xs py-2 px-6 flex justify-between items-center hidden md:flex ${printClass}`}>
         <div className="flex gap-4">
-          <span className="flex items-center gap-1"><Phone size={14} /> +88-025888-67105</span>
-          <span className="flex items-center gap-1"><Mail size={14} /> adsw@ruet.ac.bd</span>
+          <span className="flex items-center gap-1"><Phone size={14} /> {siteSettings.contacts.ambulance.phoneCombined}</span>
+          <span className="flex items-center gap-1"><Mail size={14} /> {siteSettings.contacts.email}</span>
         </div>
         <div>
           Ambulance 24/7: Call for Emergency

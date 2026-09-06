@@ -1,6 +1,7 @@
 // components/Footer.tsx
 
 import { Mail, Phone } from "lucide-react";
+import { siteSettings } from "../config/siteSettings";
 
 export default function Footer() {
     return (
@@ -19,13 +20,13 @@ export default function Footer() {
 
                     <div className="mt-4 space-y-2">
                         <p className="flex items-center gap-2">
-                            <Phone size={16} /> +88-025888-67105
+                            <Phone size={16} /> {siteSettings.contacts.ambulance.phoneCombined}
                         </p>
                         <p className="flex items-center gap-2">
                             <Phone size={16} /> +88-025888-66798
                         </p>
                         <p className="flex items-center gap-2">
-                            <Mail size={16} /> adsw@ruet.ac.bd
+                            <Mail size={16} /> {siteSettings.contacts.email}
                         </p>
                     </div>
                 </div>

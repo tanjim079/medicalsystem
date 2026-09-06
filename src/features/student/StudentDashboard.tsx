@@ -1,12 +1,14 @@
 import MainLayout from "../../layouts/MainLayout";
 import StudentProfile from "./StudentProfile";
 import MedicalHistory from "./MedicalHistory";
+import LaboratoryReports from "./LaboratoryReports";
 import MedicalCertificates from "./MedicalCertificates";
 import AppointmentsList from "./AppointmentsList";
 import { useAuthStore } from "../../store/useAuthStore";
 import { mockPatients } from "../../data/mockPatients";
 import Card from "../../components/ui/Card";
 import { Info } from "lucide-react";
+import { siteSettings } from "../../config/siteSettings";
 
 export default function StudentDashboard() {
   const user = useAuthStore((s) => s.user);
@@ -57,15 +59,15 @@ export default function StudentDashboard() {
             <ul className="text-sm text-gray-600 space-y-4 relative z-10">
               <li className="flex justify-between items-center pb-2 border-b border-gray-50">
                 <span className="font-medium text-gray-700">Hours</span>
-                <span className="text-gray-500">Sat-Thu: 07:30 AM - 10:00 PM</span>
+                <span className="text-gray-500">{siteSettings.serviceHours.workingDaysShort}: {siteSettings.serviceHours.time}</span>
               </li>
               <li className="flex justify-between items-center pb-2 border-b border-gray-50">
-                <span className="font-medium text-gray-700">Lunch Break</span>
-                <span className="text-gray-500">1:30 PM - 3:00 PM</span>
+                <span className="font-medium text-gray-700">{siteSettings.serviceHours.lunchBreakLabel}</span>
+                <span className="text-gray-500">{siteSettings.serviceHours.lunchBreakTime}</span>
               </li>
               <li className="flex justify-between items-center pb-2 border-b border-gray-50">
-                <span className="font-medium text-red-500">Friday</span>
-                <span className="text-red-500 bg-red-50 px-2 py-0.5 rounded-md font-medium text-xs">Off Day</span>
+                <span className="font-medium text-red-500">{siteSettings.serviceHours.offDayLabel}</span>
+                <span className="text-red-500 bg-red-50 px-2 py-0.5 rounded-md font-medium text-xs">{siteSettings.serviceHours.offDayStatus}</span>
               </li>
               <li className="flex justify-between items-center">
                 <span className="font-medium text-gray-700">Ambulance</span>
@@ -79,6 +81,7 @@ export default function StudentDashboard() {
         <div className="md:col-span-2 space-y-6">
           <AppointmentsList />
           <MedicalHistory />
+          <LaboratoryReports />
           <MedicalCertificates />
         </div>
       </div>

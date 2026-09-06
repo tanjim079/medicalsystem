@@ -1,11 +1,15 @@
 import type { Patient } from "../../data/mockPatients";
 import Card from "../../components/ui/Card";
+import { useLaboratoryStore } from "../../store/useLaboratoryStore";
+import { Link } from "react-router-dom";
 
 export default function RightPanel({
   patient,
 }: {
   patient: Patient | null;
 }) {
+  const allReports = useLaboratoryStore(s => s.reports);
+
   if (!patient) {
     return (
       <Card>
@@ -55,6 +59,28 @@ export default function RightPanel({
         </div>
       </Card>
 
+      {/* 🔬 Lab Reports */}
+      <Card>
+        <h2 className="font-semibold mb-3">Recent Lab Reports</h2>
+        
+        {allReports.filter(r => r.patientId.toLowerCase() === patient.universityId.toLowerCase() && r.status === 'Validated').length === 0 ? (
+          <div className="text-sm text-gray-500 italic">No validated reports found.</div>
+        ) : (
+          <div className="space-y-2">
+            {allReports
+              .filter(r => r.patientId.toLowerCase() === patient.universityId.toLowerCase() && r.status === 'Validated')
+              .map(report => (
+                <div key={report.id} className="text-sm border border-gray-100 rounded-lg p-2 bg-gray-50 flex justify-between items-center">
+                  <div>
+                    <div className="font-medium text-blue-900">{report.testName}</div>
+                    <div className="text-xs text-gray-500">{new Date(report.validatedAt || '').toLocaleDateString()}</div>
+                  </div>
+                  <Link to={`/reports/view/${report.id}`} target="_blank" className="text-blue-600 hover:underline text-xs font-medium">View</Link>
+                </div>
+            ))}
+          </div>
+        )}
+      </Card>
     </div>
   );
 }

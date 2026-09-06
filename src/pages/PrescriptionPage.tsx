@@ -10,6 +10,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { useAuthStore } from "../store/useAuthStore";
 import { usePrescriptionStore } from "../store/usePrescriptionStore";
+import { useLaboratoryStore } from "../store/useLaboratoryStore";
 import { Edit2, X, Search } from "lucide-react";
 import { medicalTests, type MedicalTest } from "../data/tests";
 
@@ -29,6 +30,7 @@ export default function PrescriptionPage() {
 
     const user = useAuthStore((s) => s.user);
     const addPrescription = usePrescriptionStore((s) => s.addPrescription);
+    const addRequest = useLaboratoryStore((s) => s.addRequest);
     const patient = mockPatients.find((p) => p.universityId.toLowerCase() === id?.toLowerCase());
 
     const [medicinesList, setMedicinesList] = useState<PrescriptionItem[]>([]);
@@ -103,6 +105,19 @@ export default function PrescriptionPage() {
             medicines: medicinesList,
             tests: selectedTests.map(t => ({ id: t.id, name: t.name })),
             advice: advice,
+        });
+
+        selectedTests.forEach(test => {
+            addRequest({
+                patientId: id,
+                patientName: patient.name,
+                testId: test.id,
+                testName: test.name,
+                category: test.category,
+                requestedBy: user?.id || "unknown",
+                requestedByName: user?.name || "Doctor",
+                priority: "Routine"
+            });
         });
 
         setIsSubmitted(true);
