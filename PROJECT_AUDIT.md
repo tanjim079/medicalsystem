@@ -42,7 +42,6 @@
 ## 2. Project Structure
 
 ### Root Directory Overview
-
 * [package.json](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/package.json): Defines npm scripts (`dev`, `build`, `lint`, `preview`) and dependencies.
 * [vite.config.ts](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/vite.config.ts): Basic Vite configuration using `@vitejs/plugin-react`.
 * [tailwind.config.js](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/tailwind.config.js): Tailwind content config pointing to `./index.html` and `./src/**/*.{js,ts,jsx,tsx}`.
@@ -153,7 +152,6 @@ src/
 ## 4. User Roles & Permissions
 
 ### System Roles Identified
-
 The system defines 7 roles in [users.ts](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/data/users.ts): `doctor`, `student`, `teacher`, `officer`, `admin`, `receptionist`, `pathologist`.
 
 ```typescript
@@ -164,7 +162,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 ### Detailed Role Profiles
 
 #### 1. Student
-
 * **Dashboard**: `/student` rendered by [StudentDashboard.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/student/StudentDashboard.tsx).
 * **Accessible Pages**: `/student`, `/doctors`, `/staff`, `/tests`, `/services`, `/#/prescription/view/:id`, `/#/certificate/view/:id`, `/#/reports/view/:id`.
 * **Available Actions**: Book appointments (with Friday validation), view personal appointments, delete appointments, view medical prescription history, view validated lab reports, view and download medical leave certificates.
@@ -172,37 +169,31 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Enforcement Status**: **Unenforced on route level**. `/student` has no route guard in [App.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/App.tsx). An unauthenticated user navigating to `/#/student` will simply see a blank dashboard with `user?.name` undefined.
 
 #### 2. Doctor
-
 * **Dashboard**: `/doctor` rendered by [DoctorDashboard.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/DoctorDashboard.tsx) within [DoctorLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/DoctorLayout.tsx).
 * **Accessible Pages**: `/doctor`, `/doctor/appointments`, `/doctor/consultancy`, `/prescription/:id`, `/certificate/create/:patientId`, plus public pages.
 * **Available Actions**: View metrics, filter appointment requests, accept/reject appointments, search patient by university ID, view patient profile and lab reports, write prescriptions with stock checking, order diagnostic tests, issue medical leave certificates with automatic duration calculations.
 * **Enforcement Status**: **Enforced on layout level**. [DoctorLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/DoctorLayout.tsx) redirects to `/login` if `!user || user.role !== "doctor"`. However, `/prescription/:id` and `/certificate/create/:patientId` are declared outside `DoctorLayout` in [App.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/App.tsx) and have **no protection**.
 
 #### 3. Receptionist
-
 * **Dashboard**: `/receptionist` redirects to `/receptionist/patients`. Sub-routes: `/receptionist/patients`, `/receptionist/billing`, `/receptionist/pharmacy`.
 * **Accessible Pages**: Patient Management, Test Billing, Pharmacy Dispense.
 * **Available Actions**: Search patient table, generate test bills with student/employee rates, calculate tax/discounts, dispatch tests to the laboratory queue, view prescription queue, mark prescribed medicines as dispensed, trigger auto-billing for tests ordered in prescriptions.
 * **Enforcement Status**: **Unenforced**. Routes are rendered directly in [App.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/App.tsx) with no layout guard.
 
 #### 4. Pathologist
-
 * **Dashboard**: `/pathologist/dashboard` within [PathologistLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/PathologistLayout.tsx).
 * **Accessible Pages**: `/pathologist/dashboard`, `/pathologist/tests`, `/pathologist/tests/:id`, `/pathologist/reports`, `/pathologist/profile`, `/reports/view/:id`.
 * **Available Actions**: View pending lab tests, process a test request, record test parameters (values, units, ranges, abnormal flags), submit reports for validation, formally validate reports (`Awaiting Validation` → `Validated`), print and export PDF reports.
 * **Enforcement Status**: **Enforced on layout level**. [PathologistLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/PathologistLayout.tsx) redirects to `/login` if `!user || user.role !== "pathologist"`. However, `/reports/view/:id` is declared at the root level outside the layout.
 
 #### 5. Admin
-
 * **Dashboard**: `/admin` within [AdminLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/AdminLayout.tsx). Sub-routes: `/admin/medicines`, `/admin/doctors`.
 * **Accessible Pages**: Admin Dashboard, Admin Medicines, Admin Doctors.
 * **Available Actions**: View doctor and medicine counts, update local medicine stock in dashboard (unpersisted). Doctor addition and medicine addition pages are non-functional stubs.
 * **Enforcement Status**: **Completely Unenforced**. [AdminLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/AdminLayout.tsx) does not check `useAuthStore`. Any user or guest navigating to `/#/admin` has full access.
 
 #### 6. Teacher & Officer
-
 * **Status**: **Unimplemented**. Although present in the login dropdown and in [users.ts](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/data/users.ts) (`TCH001`, `OFF001`), [LoginPage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/pages/LoginPage.tsx) executes:
-
   ```typescript
   alert(`${user.role} dashboard not implemented yet`);
   ```
@@ -224,7 +215,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 | Access Admin Panels | ❌ | ❌ | ❌ | ❌ | 🟡 (Stubs) | ⚠️ (Unprotected) |
 
 ### Security & Authorization Limitations
-
 1. **Frontend-Only Pseudo-Security**: All authorization checks happen inside React components and layouts via `useAuthStore`.
 2. **Hardcoded User List**: User credentials consist only of an ID string hardcoded in [users.ts](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/data/users.ts).
 3. **Missing Route Guards**: Half of the sensitive routes (`/student`, `/receptionist/*`, `/admin/*`, `/prescription/:id`, `/certificate/create/:patientId`) have **zero route guards**.
@@ -235,7 +225,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 ## 5. Page-by-Page Audit
 
 ### 1. Landing Page (`/`)
-
 * **Route**: `/`
 * **Layout**: [PublicLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/PublicLayout.tsx)
 * **Components**: [HomePage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/home/HomePage.tsx), [Navbar.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/components/Navbar.tsx), inlined footer.
@@ -248,7 +237,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: Complete for landing page requirements.
 
 ### 2. Login Page (`/login`)
-
 * **Route**: `/login`
 * **Layout**: [PublicLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/PublicLayout.tsx)
 * **Components**: [LoginPage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/pages/LoginPage.tsx), `Card`, `Input`, `Button`.
@@ -261,7 +249,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: 🟡 Partial (no password, no token, alerts used for errors).
 
 ### 3. Student Dashboard (`/student`)
-
 * **Route**: `/student`
 * **Layout**: [MainLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/MainLayout.tsx)
 * **Components**: [StudentDashboard.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/student/StudentDashboard.tsx), [StudentProfile.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/student/StudentProfile.tsx), [AppointmentsList.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/student/AppointmentsList.tsx), [BookAppointmentModal.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/student/BookAppointmentModal.tsx), [MedicalHistory.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/student/MedicalHistory.tsx), [LaboratoryReports.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/student/LaboratoryReports.tsx), [MedicalCertificates.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/student/MedicalCertificates.tsx).
@@ -273,7 +260,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: ✅ Complete client-side implementation.
 
 ### 4. Doctor Dashboard & Overview (`/doctor`)
-
 * **Route**: `/doctor`
 * **Layout**: [DoctorLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/DoctorLayout.tsx)
 * **Components**: [DoctorDashboard.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/DoctorDashboard.tsx), [DoctorOverview.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/DoctorOverview.tsx).
@@ -285,7 +271,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: ✅ Complete.
 
 ### 5. Doctor Appointments Management (`/doctor/appointments`)
-
 * **Route**: `/doctor/appointments`
 * **Layout**: [DoctorLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/DoctorLayout.tsx)
 * **Components**: [AppointmentsPage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/AppointmentsPage.tsx).
@@ -297,7 +282,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: ✅ Complete.
 
 ### 6. Doctor Consultancy Page (`/doctor/consultancy`)
-
 * **Route**: `/doctor/consultancy`
 * **Layout**: [DoctorLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/DoctorLayout.tsx)
 * **Components**: [ConsultancyPage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/ConsultancyPage.tsx), [DoctorHeader.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/DoctorHeader.tsx), [PatientDetails.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/PatientDetails.tsx), [TreatmentHistory.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/TreatmentHistory.tsx), [RightPanel.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/RightPanel.tsx).
@@ -309,7 +293,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: 🟡 Partial (mock treatment history, TDZ bug).
 
 ### 7. Prescription Creation Page (`/prescription/:id`)
-
 * **Route**: `/prescription/:id`
 * **Layout**: [MainLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/MainLayout.tsx)
 * **Components**: [PrescriptionPage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/pages/PrescriptionPage.tsx).
@@ -321,7 +304,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: ✅ Complete client-side functionality.
 
 ### 8. View Prescription Page (`/prescription/view/:prescriptionId`)
-
 * **Route**: `/prescription/view/:prescriptionId`
 * **Layout**: [MainLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/MainLayout.tsx)
 * **Components**: [ViewPrescriptionPage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/pages/ViewPrescriptionPage.tsx).
@@ -331,7 +313,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: ✅ Complete.
 
 ### 9. Create Medical Certificate Page (`/certificate/create/:patientId`)
-
 * **Route**: `/certificate/create/:patientId`
 * **Layout**: [MainLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/MainLayout.tsx)
 * **Components**: [CreateCertificatePage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/pages/CreateCertificatePage.tsx).
@@ -342,7 +323,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: ✅ Complete.
 
 ### 10. View Medical Certificate Page (`/certificate/view/:certificateId`)
-
 * **Route**: `/certificate/view/:certificateId`
 * **Layout**: [MainLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/MainLayout.tsx)
 * **Components**: [ViewCertificatePage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/pages/ViewCertificatePage.tsx).
@@ -352,7 +332,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: ✅ Complete.
 
 ### 11. Receptionist Patient Management (`/receptionist/patients`)
-
 * **Route**: `/receptionist/patients` (redirected from `/receptionist`)
 * **Layout**: [MainLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/MainLayout.tsx)
 * **Components**: [PatientManagement.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/receptionist/PatientManagement.tsx).
@@ -363,7 +342,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: 🟡 Partial / UI Mock.
 
 ### 12. Receptionist Test Billing (`/receptionist/billing`)
-
 * **Route**: `/receptionist/billing`
 * **Layout**: [MainLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/MainLayout.tsx)
 * **Components**: [TestBilling.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/receptionist/TestBilling.tsx).
@@ -374,7 +352,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: ✅ Complete client-side functionality.
 
 ### 13. Receptionist Pharmacy & Dispensing (`/receptionist/pharmacy`)
-
 * **Route**: `/receptionist/pharmacy`
 * **Layout**: [MainLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/MainLayout.tsx)
 * **Components**: [MedicineDispense.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/receptionist/MedicineDispense.tsx).
@@ -385,7 +362,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: ✅ Complete client-side functionality.
 
 ### 14. Pathologist Dashboard (`/pathologist/dashboard`)
-
 * **Route**: `/pathologist/dashboard`
 * **Layout**: [PathologistLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/PathologistLayout.tsx)
 * **Components**: [PathologistDashboard.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/pathologist/PathologistDashboard.tsx).
@@ -396,7 +372,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: ✅ Complete.
 
 ### 15. Pathologist Test Management & Reports (`/pathologist/tests` & `/pathologist/reports`)
-
 * **Route**: `/pathologist/tests` and `/pathologist/reports` (rendered by same component)
 * **Layout**: [PathologistLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/PathologistLayout.tsx)
 * **Components**: [TestManagement.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/pathologist/TestManagement.tsx).
@@ -407,7 +382,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: ✅ Complete.
 
 ### 16. Pathologist Test Processing (`/pathologist/tests/:id`)
-
 * **Route**: `/pathologist/tests/:id`
 * **Layout**: [PathologistLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/PathologistLayout.tsx)
 * **Components**: [TestDetails.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/pathologist/TestDetails.tsx).
@@ -418,7 +392,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: ✅ Complete.
 
 ### 17. Laboratory Report View (`/reports/view/:id`)
-
 * **Route**: `/reports/view/:id`
 * **Layout**: Standalone page with top action bar.
 * **Components**: [ReportView.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/pathologist/ReportView.tsx).
@@ -429,7 +402,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: ✅ Complete.
 
 ### 18. Pathologist Profile (`/pathologist/profile`)
-
 * **Route**: `/pathologist/profile`
 * **Layout**: [PathologistLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/PathologistLayout.tsx)
 * **Components**: [PathologistProfile.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/pathologist/PathologistProfile.tsx).
@@ -439,7 +411,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: 🟡 Partial (read-only mock view).
 
 ### 19. Admin Dashboard (`/admin`)
-
 * **Route**: `/admin`
 * **Layout**: [AdminLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/AdminLayout.tsx)
 * **Components**: [AdminDashboard.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/admin/AdminDashboard.tsx).
@@ -450,7 +421,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: 🟡 Partial / Mock.
 
 ### 20. Admin Doctors Page (`/admin/doctors`)
-
 * **Route**: `/admin/doctors`
 * **Layout**: [AdminLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/AdminLayout.tsx)
 * **Components**: [DoctorsPage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/admin/doctors/DoctorsPage.tsx), [AddDoctorForm.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/admin/doctors/AddDoctorForm.tsx), [DoctorList.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/admin/doctors/DoctorList.tsx).
@@ -460,7 +430,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 * **Feature Completeness**: ❌ Missing / Pure Stub.
 
 ### 21. Admin Medicines Page (`/admin/medicines`)
-
 * **Route**: `/admin/medicines`
 * **Layout**: [AdminLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/AdminLayout.tsx)
 * **Components**: [MedicinesPage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/admin/medicines/MedicinesPage.tsx), [AddMedicineForm.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/admin/medicines/AddMedicineForm.tsx), [MedicineList.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/admin/medicines/MedicineList.tsx).
@@ -501,7 +470,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
   │  Patient info & past lab reports loaded
   │  Doctor clicks "Create Prescription" -> /prescription/2204001
 ```
-
 * **State Changes**: `useAppointmentStore` (creates record, updates status from `pending` to `accepted`).
 * **Integrity**: Fully verified and working seamlessly between Student and Doctor roles via `localStorage`.
 
@@ -538,7 +506,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
   │  usePrescriptionStore.updatePrescriptionStatus -> 'dispensed'
   │  Prescription moves to "Dispensed" tab
 ```
-
 * **State Changes**: `usePrescriptionStore` (adds prescription, updates status to `dispensed`), `useLaboratoryStore` (adds pending test request).
 * **Integrity**: Verified. The cross-module prefill between `MedicineDispense` and `TestBilling` via `location.state` is fully functional.
 
@@ -575,7 +542,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
   │  Doctor at /doctor/consultancy?patientId=2204001 -> RightPanel displays CBC report
   │  Both can open and print the finalized official lab report with PDF download
 ```
-
 * **State Changes**: `useLaboratoryStore` (request status `Pending` → `In Progress`; report created with `Awaiting Validation`; validated report status `Validated`).
 * **Integrity**: Verified. This is one of the most sophisticated end-to-end chains implemented in the project.
 
@@ -601,7 +567,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
   │  Renders official RUET Medical Certificate with Ref No MC-XXXXXXXX
   │  Student prints or downloads PDF
 ```
-
 * **State Changes**: `useCertificateStore` (generates certificate with `uuidv4` and persists in localStorage).
 * **Integrity**: Verified and fully working.
 
@@ -621,7 +586,6 @@ export type UserRole = "doctor" | "student" | "teacher" | "officer" | "admin" | 
 ## 7. Data & State Management
 
 ### State Storage & Libraries
-
 The project manages application state using **Zustand (v5.0.12)** with the `persist` middleware. All persisted state slices are stored in the browser's `window.localStorage` as JSON strings.
 
 ### Store Inventory
@@ -657,7 +621,6 @@ The project manages application state using **Zustand (v5.0.12)** with the `pers
 ```
 
 ### Persistence & Cross-Role Data Sharing
-
 * **Persistence**: Because all stores use Zustand `persist`, all appointment bookings, prescriptions, bills, certificates, and lab reports **survive page refreshes and browser restarts**.
 * **Cross-Role Sharing**: Because all roles share the same browser `localStorage` domain, switching users via `/login` allows seamless testing of multi-actor workflows (e.g., student creates appointment → log out → doctor logs in → doctor accepts → doctor prescribes → log out → receptionist dispenses).
 * **Limitations**:
@@ -669,7 +632,6 @@ The project manages application state using **Zustand (v5.0.12)** with the `pers
 ## 8. Backend & Database Readiness
 
 ### Current Backend Status
-
 * **Backend**: **0% Implemented**. No server runtime, no API endpoints, no backend framework.
 * **Database**: **0% Implemented**. No schema migrations, no ORM, no connection strings.
 * **Authentication Server**: **0% Implemented**. No sessions, no JWT issuing, no OAuth, no password hashing.
@@ -733,13 +695,11 @@ When a real backend is implemented, the current mock stores and direct state mut
 ## 9. UI/UX Audit
 
 ### Visual Consistency & Design Language
-
 * **Design System**: Built on Tailwind CSS utility classes using a cohesive university healthcare palette: primary royal blue (`#2563eb`, `#1d4ed8`), navy (`#1e3a8a`), slate footer (`#0f172a`), emerald green for certificates/dispensing (`#059669`), and red for alerts/emergency contacts (`#dc2626`).
 * **Typography**: Uses system sans-serif font stack. Hierarchy is clean with bold headers (`text-2xl`, `text-3xl font-extrabold`) and subtle muted subtitles (`text-gray-500`, `text-sm font-medium`).
 * **Watermarks & Document Realism**: Printable prescriptions, certificates, and lab reports feature a background SVG watermark of the RUET emblem with low opacity (`opacity-[0.04]`), standard institutional letterheads, bilingual contact strings, and doctor signature blocks.
 
 ### Layout & Responsiveness
-
 * **Desktop Layout**: Spacious multi-column layouts with sidebar/sub-navigation headers, responsive grid dashboards (`grid-cols-1 md:grid-cols-3` or `grid-cols-1 lg:grid-cols-12`).
 * **Mobile / Tablet Responsiveness**:
   * [Navbar.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/components/Navbar.tsx) includes a fully functional mobile hamburger toggle with slide-down menu.
@@ -747,7 +707,6 @@ When a real backend is implemented, the current mock stores and direct state mut
 * **Print Styling**: Dedicated `@media print` utilities (`print:hidden`, `print:p-0`, `print:border-none`, `print:shadow-none`) ensure clean single-page outputs when using the browser print dialog.
 
 ### Weaknesses & Usability Shortcomings
-
 1. **Reliance on Browser `alert()` and `confirm()`**: Actions like appointment booking, billing, prescription submission, and validation trigger native browser modal dialogs (`alert()`, `window.confirm()`) instead of modern accessible toast notifications or custom confirmation modals.
 2. **Missing Loading States**: There are no skeleton loaders or spinner states anywhere in the application. Because all data is synchronous in localStorage, components assume data is instantly available.
 3. **Empty Admin Screens**: Admin routes display unstyled, plain white boxes with raw inputs and text like "No doctors yet", clashing with the high aesthetic polish of the student and doctor pages.
@@ -758,7 +717,6 @@ When a real backend is implemented, the current mock stores and direct state mut
 ## 10. Code Quality Audit
 
 ### Strengths
-
 * **TypeScript Strictness**: `tsc -b` compiles cleanly with zero type errors. Interfaces are defined for appointments, lab tests, lab reports, patients, bills, certificates, and users.
 * **Modularity**: Domain logic is grouped cleanly under `src/features/` by role/context.
 * **PDF & Printing Implementation**: Clean integration of `html2canvas` and `jspdf` combined with `@media print` CSS.
@@ -856,7 +814,6 @@ Recommended approach: Merge PublicLayout into MainLayout with an optional prop f
 ## 13. Implemented vs Partial vs Missing Summary
 
 ### ✅ Fully Implemented (Functional with Local Persistence)
-
 1. **Public Portal**: Home page, Doctors list, Staff list, Medical services catalog, Test rates directory.
 2. **Student Portal**: Profile overview, appointment booking (Friday restriction + serial generator), appointment deletion, medical history timeline, validated lab reports list, medical certificates list.
 3. **Doctor Portal**: Overview metrics, appointment request approval/rejection, patient ID lookup, live prescription creation with medicine stock checking and diagnostic test dispatch, printable prescription generation with watermark and PDF download.
@@ -865,7 +822,6 @@ Recommended approach: Merge PublicLayout into MainLayout with an optional prop f
 6. **Receptionist Modules**: Test billing invoice creation with Student/Employee pricing tiers, VAT/discount calculators, receipt PDF generation, pharmacy prescription queue, medicine dispensing, and auto-bill shortcut.
 
 ### 🟡 Partially Implemented (UI Exists, Functionality Incomplete)
-
 1. **Authentication**: ID-matching mock login without password or session security. Teacher/officer logins throw alerts. Demo text suggests non-existent ID.
 2. **Route Authorization**: Route guards implemented only in `DoctorLayout` and `PathologistLayout`. Missing in `AdminLayout`, `/student`, `/receptionist/*`, and direct document views.
 3. **Receptionist Patient Management**: Search works, but all creation/edit buttons are inactive stubs.
@@ -873,7 +829,6 @@ Recommended approach: Merge PublicLayout into MainLayout with an optional prop f
 5. **Admin Dashboard**: Medicine stock updates only update local component `useState` and are lost on reload.
 
 ### ❌ Not Implemented (Missing Entirely)
-
 1. **Real Backend Server & API Layer**: No REST/GraphQL server, no HTTP clients (`axios`/`fetch` wrappers).
 2. **Database & Migrations**: No persistent database.
 3. **Admin Doctor & Medicine CRUD**: `/admin/doctors` and `/admin/medicines` are non-functional stubs (`console.log` only).
@@ -882,7 +837,6 @@ Recommended approach: Merge PublicLayout into MainLayout with an optional prop f
 6. **Catch-All 404 Route**: No fallback route for invalid URLs in `App.tsx`.
 
 ### ⚠️ Demo/Mock Implementations (Work only because of static data / frontend state)
-
 * Login authentication via [users.ts](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/data/users.ts).
 * Patient demographics via [mockPatients.ts](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/data/mockPatients.ts).
 * Diagnostic test definitions via [tests.ts](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/data/tests.ts).
@@ -894,26 +848,22 @@ Recommended approach: Merge PublicLayout into MainLayout with an optional prop f
 ## 14. Technical Debt
 
 ### Critical Priority (Must address before backend integration)
-
 1. **ESLint / TDZ Bug in ConsultancyPage**: Fix `handleSearch` declaration order in [ConsultancyPage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/ConsultancyPage.tsx) so the project passes linting without errors.
 2. **Route Protection Architecture**: Implement an `<AuthGuard allowedRoles={[...]} />` wrapper across all protected routes in [App.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/App.tsx).
 3. **Connect TreatmentHistory to Store**: Replace static mock history in [TreatmentHistory.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/TreatmentHistory.tsx) with live queries to `usePrescriptionStore`.
 
 ### High Priority (Address before production)
-
 1. **Bundle Size & Code Splitting**: Lazy load heavy PDF generation pages (`PrescriptionPage`, `ViewPrescriptionPage`, `TestBilling`, `ReportView`) using `React.lazy()` to reduce the initial 1 MB bundle.
 2. **Standardized Notification System**: Replace browser `alert()` and `confirm()` calls with an accessible notification library (e.g., Sonner or React Hot Toast).
 3. **Fix Admin State Loss**: Migrate admin medicine stock updates in [AdminDashboard.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/admin/AdminDashboard.tsx) into a persistent store or wire them into real CRUD operations.
 4. **404 Handling**: Add a catch-all route `<Route path="*" element={<NotFound />} />` in `App.tsx`.
 
 ### Medium Priority (Important for maintainability)
-
 1. **Delete Dead Code**: Remove [Footer.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/components/Footer.tsx), [AdminSidebar.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/admin/AdminSidebar.tsx), [NotesPanel.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/NotesPanel.tsx), [PrescriptionPanel.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/PrescriptionPanel.tsx), and [App.css](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/App.css).
 2. **Consolidate Layouts**: Merge [PublicLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/PublicLayout.tsx) and [MainLayout.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/layouts/MainLayout.tsx) to eliminate duplicate footer markup.
 3. **Fix Login Demo Helper**: Correct `RUET001` in [LoginPage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/pages/LoginPage.tsx) to `2204001` or `2204002`.
 
 ### Low Priority (Nice-to-have improvements)
-
 1. Fix JSX string literal interpolation in `AdminDashboard.tsx` line 119 (`aria-label={'Stock for ${m.name}'}`).
 2. Implement sub-navigation tabs in `PathologistLayout.tsx` matching `DoctorLayout.tsx`.
 
@@ -930,8 +880,8 @@ Recommended approach: Merge PublicLayout into MainLayout with an optional prop f
 | **Security** | **1.0 / 10** | Unacceptable for production. No passwords, no JWTs, unencrypted plaintext localStorage, multiple sensitive routes completely unprotected, no server-side access control. |
 | **Accessibility** | **5.5 / 10** | Semantic HTML is partially used. Good contrast ratios. Lacks ARIA attributes on modals and complex custom select dropdowns, relies on browser alerts. |
 | **Responsiveness** | **7.5 / 10** | Responsive mobile navigation drawer, fluid grid layouts, and horizontal scroll wrappers on tables. Some PDF preview containers are wide on small mobile screens. |
-| **Backend Readiness** | **5.0 / 10** | Data contracts (types/interfaces) in `src/types/` and Zustand store actions map very cleanly to future REST endpoints. However, no HTTP service layer exists yet. |
-| **Database Readiness** | **4.5 / 10** | Relational schemas between patients, appointments, prescriptions, bills, and lab reports are conceptually clear, but no SQL schemas, ORM models, or migration scripts exist. |
+| **Backend Readiness**| **5.0 / 10** | Data contracts (types/interfaces) in `src/types/` and Zustand store actions map very cleanly to future REST endpoints. However, no HTTP service layer exists yet. |
+| **Database Readiness**| **4.5 / 10** | Relational schemas between patients, appointments, prescriptions, bills, and lab reports are conceptually clear, but no SQL schemas, ORM models, or migration scripts exist. |
 | **Scalability** | **3.5 / 10** | Client-side `localStorage` cannot scale beyond one user on one device. Large un-split 1 MB bundle slows initial load. |
 | **Maintainability** | **7.0 / 10** | Clean, readable, modular React code. Easily navigable by any new developer once dead code is pruned. |
 | **Overall Production Readiness** | **4.0 / 10** | **Ready as a high-fidelity client demo / design prototype, but completely unready for production deployment until a backend, database, and real authentication are built.** |
@@ -1034,21 +984,18 @@ RUET Medical Application (Single Page App)
 ## 17. Important Findings
 
 ### What is Already Strong
-
 1. **Domain Workflow Continuity**: The interconnected state between Doctor prescribing → tests sent to Pathologist → Pathologist entering parameters and validating → reports appearing in Doctor Consultancy and Student Dashboard is exceptionally well coordinated.
 2. **Document Presentation & PDF Export**: The prescription, medical certificate, and pathology report views are designed with high graphic fidelity, incorporating university watermarks, accurate Bangladesh university medical formats, and working PDF download/print capabilities.
 3. **TypeScript Safety**: High level of type coverage (`tsc -b` passes with zero type errors), with complete interface definitions for medical records, lab parameters, and appointment lifecycles.
 4. **Tailwind Styling**: Clean, cohesive, responsive aesthetic suited for an institutional healthcare facility.
 
 ### What Needs Improvement
-
 1. **ESLint Error**: [ConsultancyPage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/ConsultancyPage.tsx) calls `handleSearch` before declaration, breaking the linter and creating a potential runtime error on query parameter routing.
 2. **Route Authorization**: Route guards must be centralized and applied to all protected routes (`/student`, `/admin/*`, `/receptionist/*`, `/prescription/*`, `/certificate/*`).
 3. **Admin Modules**: Admin pages for doctors and medicines are completely non-functional stubs that log to the console.
 4. **User Feedback**: Replace all native `alert()` and `confirm()` prompts with non-blocking toast notifications.
 
 ### What is Missing
-
 1. **Backend & Database**: No server, API client, or persistent database exists.
 2. **Actual Authentication**: No password verification, JWT handling, or session management.
 3. **Patient Registration**: No mechanism to register a new student, teacher, or staff member.
@@ -1056,7 +1003,6 @@ RUET Medical Application (Single Page App)
 5. **404 Catch-All Route**: Missing fallback route in `App.tsx`.
 
 ### What Could Break
-
 1. **`ConsultancyPage.tsx` TDZ Crash**: If navigated to with `?patientId=`, the component risks throwing a JavaScript runtime error due to accessing an uninitialized `const` function inside `useEffect`.
 2. **Bundle Size Degradation**: Loading `jspdf` and `html2canvas` in the main bundle results in a 1 MB initial chunk that will slow load times on low-bandwidth mobile networks.
 3. **Data Loss in Admin Stock Management**: Any medicine stock changes made in `AdminDashboard` will disappear as soon as the user refreshes or changes routes.
@@ -1065,7 +1011,6 @@ RUET Medical Application (Single Page App)
 ### What Should Be Done Next (Prioritized Roadmap)
 
 #### Phase 1: Codebase Cleanup & Stability (Immediate)
-
 1. Fix the `handleSearch` order bug in [ConsultancyPage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/ConsultancyPage.tsx) to achieve a clean `npm run lint`.
 2. Delete orphaned files: [Footer.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/components/Footer.tsx), [AdminSidebar.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/admin/AdminSidebar.tsx), [NotesPanel.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/NotesPanel.tsx), [PrescriptionPanel.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/doctor/PrescriptionPanel.tsx), [App.css](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/App.css).
 3. Correct the demo ID typo in [LoginPage.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/pages/LoginPage.tsx) (`RUET001` → `2204001`).
@@ -1073,7 +1018,6 @@ RUET Medical Application (Single Page App)
 5. Wrap routes in a reusable `<ProtectedRoute allowedRoles={[...]} />` component.
 
 #### Phase 2: Frontend Completeness (Short Term)
-
 1. Convert [AdminDashboard.tsx](file:///e:/Career%20Mission/RUET%20Medical/ruet-medical-frontend/src/features/admin/AdminDashboard.tsx) medicine stock into a persistent store slice so stock changes persist across sessions.
 2. Complete the Admin doctor and medicine forms to actually append items to the lists rather than logging to `console.log`.
 3. Implement a "New Patient Registration" modal on `/receptionist/patients`.
@@ -1081,7 +1025,6 @@ RUET Medical Application (Single Page App)
 5. Implement dynamic imports (`React.lazy`) for PDF-heavy pages to drop chunk size below 300 kB.
 
 #### Phase 3: Backend & Production Deployment (Medium Term)
-
 1. Build a REST API backend (e.g., Node.js/Express, NestJS, or FastAPI) with PostgreSQL/MySQL.
 2. Implement secure authentication (bcrypt password hashing, JWT access/refresh tokens, role-based middleware).
 3. Create an API service layer in `src/services/` with Axios/Fetch interceptors to replace Zustand's `localStorage` persist middleware.
