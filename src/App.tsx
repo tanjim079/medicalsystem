@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import LoginPage from "./pages/LoginPage";
 import PublicLayout from "./layouts/PublicLayout";
@@ -32,7 +32,7 @@ import ReportView from "./features/pathologist/ReportView";
 import PathologistProfile from "./features/pathologist/PathologistProfile";
 function App() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <ScrollToTop />
       <Routes>
         {/* Public Routes */}
@@ -79,7 +79,7 @@ function App() {
       </Routes>
 
 
-    </HashRouter>
+    </BrowserRouter>
   );
 }
 
