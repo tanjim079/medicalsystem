@@ -1,6 +1,7 @@
+import { useEffect } from "react";
 import { Activity, Beaker, Heart, Waves } from "lucide-react";
-import { medicalTests } from "../../data/tests";
 import type { MedicalTest } from "../../data/tests";
+import { useTestStore } from "../../store/useTestStore";
 
 const categoryIcon = (category: MedicalTest["category"]) => {
   switch (category) {
@@ -35,15 +36,34 @@ const categoryIconBgClass = (category: MedicalTest["category"]) => {
   }
 };
 
-const groupedTests: Record<MedicalTest["category"], MedicalTest[]> = {
-  Pathology: [],
-  ECG: [],
-  Ultrasonography: [],
-};
-
-medicalTests.forEach((t) => groupedTests[t.category].push(t));
-
 export default function PublicTestsPage() {
+  const { tests, fetchTests, loading } = useTestStore();
+
+  useEffect(() => {
+    fetchTests();
+  }, [fetchTests]);
+
+  const groupedTests: Record<string, MedicalTest[]> = {
+    Pathology: [],
+    ECG: [],
+    Ultrasonography: [],
+  };
+
+  tests.forEach((t) => {
+    if (!groupedTests[t.category]) {
+      groupedTests[t.category] = [];
+    }
+    groupedTests[t.category].push(t);
+  });
+
+  if (loading && tests.length === 0) {
+    return (
+      <div className="max-w-5xl mx-auto px-6 py-12 text-center text-gray-500">
+        Loading medical tests...
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-5xl mx-auto px-6 py-12">
       {/* Header */}

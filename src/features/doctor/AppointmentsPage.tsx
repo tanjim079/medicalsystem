@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppointmentStore } from '../../store/useAppointmentStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import {
@@ -22,6 +22,7 @@ export default function AppointmentsPage() {
   const user = useAuthStore((s) => s.user);
   const appointments = useAppointmentStore((s) => s.appointments);
   const updateAppointmentStatus = useAppointmentStore((s) => s.updateAppointmentStatus);
+  const fetchAppointments = useAppointmentStore((s) => s.fetchAppointments);
   const [activeTab, setActiveTab] = useState<Tab>('pending');
   const [statusNotification, setStatusNotification] = useState<string | null>(null);
   const [declineTarget, setDeclineTarget] = useState<{
@@ -32,6 +33,10 @@ export default function AppointmentsPage() {
     isAccepted: boolean;
   } | null>(null);
 
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
   if (!user || user.role !== 'doctor') return null;
 
   const myAppointments = appointments.filter((app) => app.doctorId === user.id);
@@ -41,8 +46,8 @@ export default function AppointmentsPage() {
     return app.status === activeTab;
   });
 
-  const handleAccept = (id: string) => {
-    const res = updateAppointmentStatus(id, 'accepted');
+  const handleAccept = async (id: string) => {
+    const res = await updateAppointmentStatus(id, 'accepted');
     if (!res.success) {
       alert(res.message);
     } else {
@@ -51,15 +56,15 @@ export default function AppointmentsPage() {
     }
   };
 
-  const confirmDeclineAppointment = () => {
+  const confirmDeclineAppointment = async () => {
     if (!declineTarget) return;
 
-    updateAppointmentStatus(declineTarget.id, 'rejected');
+    await updateAppointmentStatus(declineTarget.id, 'rejected');
     setStatusNotification(
       `Appointment for ${declineTarget.patientName} was declined. The time slot (${declineTarget.date} at ${declineTarget.time}) is now released and free for other patients.`
     );
-    setDeclineTarget(null);
     setTimeout(() => setStatusNotification(null), 5000);
+    setDeclineTarget(null);
   };
 
   const getStatusBadge = (status: AppointmentStatus) => {

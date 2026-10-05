@@ -2,6 +2,75 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Premium Login Page Animations ── */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-28px) scale(1.04); }
+}
+@keyframes float-mid {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50%       { transform: translateY(-18px) scale(1.02); }
+}
+@keyframes float-fast {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(0.9); opacity: 0.7; }
+  70%  { transform: scale(1.4); opacity: 0; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+@keyframes shimmer-x {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes ekg {
+  0%   { stroke-dashoffset: 1000; }
+  60%  { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+@keyframes draw-ekg {
+  0%   { stroke-dashoffset: 800; opacity: 1; }
+  80%  { stroke-dashoffset: 0;   opacity: 1; }
+  100% { stroke-dashoffset: 0;   opacity: 0.4; }
+}
+@keyframes gradient-shift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes particle-drift {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(-120px) translateX(20px); opacity: 0; }
+}
+
+.animate-float-slow  { animation: float-slow  7s ease-in-out infinite; }
+.animate-float-mid   { animation: float-mid   5s ease-in-out infinite; }
+.animate-float-fast  { animation: float-fast  3.5s ease-in-out infinite; }
+.animate-spin-slow   { animation: spin-slow   12s linear infinite; }
+.animate-pulse-ring  { animation: pulse-ring  2.4s cubic-bezier(0.4,0,0.6,1) infinite; }
+.animate-slide-up    { animation: slide-up    0.7s cubic-bezier(0.16,1,0.3,1) both; }
+.animate-fade-in     { animation: fade-in     0.6s ease both; }
+.animate-draw-ekg    { animation: draw-ekg    3.2s ease-in-out infinite; }
+.animate-gradient    {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
 @layer components {
   /* Premium Native Date & Time Pickers */
   input[type="date"]::-webkit-calendar-picker-indicator,

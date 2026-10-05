@@ -1,4 +1,4 @@
-import type { Patient } from "../../data/mockPatients";
+import type { Patient } from "../../types/patient";
 import Card from "../../components/ui/Card";
 
 export default function TreatmentHistory({

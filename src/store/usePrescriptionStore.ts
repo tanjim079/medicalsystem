@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 
 export interface PrescriptionMedicine {
     medicineId: string;
@@ -21,41 +20,85 @@ export interface Prescription {
     status: 'pending' | 'dispensed';
 }
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 interface PrescriptionState {
     prescriptions: Prescription[];
-    addPrescription: (prescription: Omit<Prescription, 'id' | 'date' | 'status'>) => void;
+    loading: boolean;
+    fetchPrescriptions: () => Promise<void>;
+    addPrescription: (prescription: Omit<Prescription, 'id' | 'date' | 'status'>) => Promise<Prescription | null>;
     getPrescriptionsByPatient: (patientId: string) => Prescription[];
-    updatePrescriptionStatus: (id: string, status: 'dispensed') => void;
+    updatePrescriptionStatus: (id: string, status: 'dispensed') => Promise<boolean>;
 }
 
-export const usePrescriptionStore = create<PrescriptionState>()(
-    persist(
-        (set, get) => ({
-            prescriptions: [],
-            addPrescription: (prescriptionData) => {
-                const newPrescription: Prescription = {
-                    ...prescriptionData,
-                    id: Math.random().toString(36).substring(2, 9),
-                    date: new Date().toISOString(),
-                    status: 'pending',
-                };
+export const usePrescriptionStore = create<PrescriptionState>()((set, get) => ({
+    prescriptions: [],
+    loading: false,
+    
+    fetchPrescriptions: async () => {
+        set({ loading: true });
+        try {
+            const res = await fetch(`${API_URL}/prescriptions`);
+            if (res.ok) {
+                const data = await res.json();
+                set({ prescriptions: data });
+            }
+        } catch (error) {
+            console.error("Error fetching prescriptions:", error);
+        } finally {
+            set({ loading: false });
+        }
+    },
+    
+    addPrescription: async (prescriptionData) => {
+        const payload = {
+            ...prescriptionData,
+            status: 'pending'
+        };
+        try {
+            const res = await fetch(`${API_URL}/prescriptions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (res.ok) {
+                const newPrescription = await res.json();
                 set((state) => ({
                     prescriptions: [...state.prescriptions, newPrescription],
                 }));
-            },
-            getPrescriptionsByPatient: (patientId) => {
-                return get().prescriptions.filter((p) => p.patientId.toLowerCase() === patientId.toLowerCase());
-            },
-            updatePrescriptionStatus: (id, status) => {
+                return newPrescription;
+            }
+            return null;
+        } catch (error) {
+            console.error("Error adding prescription:", error);
+            return null;
+        }
+    },
+    
+    getPrescriptionsByPatient: (patientId) => {
+        return get().prescriptions.filter((p) => p.patientId.toLowerCase() === patientId.toLowerCase());
+    },
+    
+    updatePrescriptionStatus: async (id, status) => {
+        try {
+            const res = await fetch(`${API_URL}/prescriptions/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            if (res.ok) {
+                const updated = await res.json();
                 set((state) => ({
                     prescriptions: state.prescriptions.map((p) =>
-                        p.id === id ? { ...p, status } : p
+                        p.id === id ? updated : p
                     ),
                 }));
-            },
-        }),
-        {
-            name: 'prescription-storage',
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error("Error updating prescription status:", error);
+            return false;
         }
-    )
-);
+    },
+}));

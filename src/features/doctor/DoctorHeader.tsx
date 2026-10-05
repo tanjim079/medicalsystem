@@ -22,22 +22,22 @@ export default function DoctorHeader({ onSearch }: Props) {
   };
 
   return (
-    <div className="mb-8">
-      <div className="bg-white rounded-full shadow-sm border border-gray-200 flex items-center w-full max-w-2xl mx-auto focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 overflow-hidden transition-all">
-        <div className="pl-4 text-gray-400 flex items-center justify-center">
-          <Search size={20} />
+    <div className="mb-8 relative z-10">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 flex items-center w-full max-w-3xl focus-within:ring-4 focus-within:ring-blue-500/20 focus-within:border-blue-500 overflow-hidden transition-all duration-300 group hover:shadow-md">
+        <div className="pl-5 text-gray-400 flex items-center justify-center group-focus-within:text-blue-500 transition-colors">
+          <Search size={22} />
         </div>
         <input
           type="text"
           placeholder="Search patient by ID (e.g. 2204001) or press Enter..."
-          className="flex-1 bg-transparent border-none outline-none px-3 py-3 text-gray-700 placeholder-gray-400 w-full"
+          className="flex-1 bg-transparent border-none outline-none px-4 py-4 text-gray-800 placeholder-gray-400 font-medium text-base w-full"
           value={id}
           onChange={(e) => setId(e.target.value)}
           onKeyDown={handleKeyDown}
         />
         <button 
           onClick={handleSearch}
-          className="bg-blue-600 text-white hover:bg-blue-700 transition-colors px-8 py-3 font-semibold h-full"
+          className="bg-gray-900 text-white hover:bg-blue-600 transition-colors duration-300 px-8 py-4 font-bold text-sm tracking-wide h-full uppercase"
         >
           Search
         </button>

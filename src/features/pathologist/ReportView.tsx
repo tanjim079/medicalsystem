@@ -179,7 +179,7 @@ export default function ReportView() {
               <p className="font-bold text-gray-900">{report.reportedByName}</p>
               <p className="text-gray-600 text-xs">Consultant Pathologist</p>
               <p className="text-gray-500 text-[10px] mt-1">
-                Status: {report.status === 'Validated' ? 'Electronically Validated' : 'Awaiting Validation'}
+                Status: {report.status === 'Validated' ? 'Electronically Validated' : (report.status === 'Awaiting Payment' ? 'Awaiting Payment Clearance' : 'Awaiting Validation')}
               </p>
             </div>
           </div>
@@ -192,3 +192,4 @@ export default function ReportView() {
     </div>
   );
 }
+

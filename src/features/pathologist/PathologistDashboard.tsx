@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useLaboratoryStore } from "../../store/useLaboratoryStore";
 import { useAuthStore } from "../../store/useAuthStore";
 import { Link } from "react-router-dom";
@@ -6,13 +7,18 @@ import { Activity, Clock, CheckCircle, FileText } from "lucide-react";
 export default function PathologistDashboard() {
   const user = useAuthStore((s) => s.user);
   
-  const getRequestsByStatus = useLaboratoryStore((s) => s.getRequestsByStatus);
-  const getReportsByStatus = useLaboratoryStore((s) => s.getReportsByStatus);
+  const requests = useLaboratoryStore((s) => s.requests);
+  const reports = useLaboratoryStore((s) => s.reports);
+  const fetchLaboratoryData = useLaboratoryStore((s) => s.fetchLaboratoryData);
 
-  const pendingTests = getRequestsByStatus('Pending');
-  const inProgressTests = getRequestsByStatus('In Progress');
-  const awaitingValidation = getReportsByStatus('Awaiting Validation');
-  const completedToday = getReportsByStatus('Validated').filter(r => 
+  useEffect(() => {
+    fetchLaboratoryData();
+  }, [fetchLaboratoryData]);
+
+    const pendingTests = requests.filter(r => r.status === 'Pending');
+  const inProgressTests = requests.filter(r => r.status === 'In Progress');
+  const awaitingValidation = reports.filter(r => r.status === 'Awaiting Validation');
+  const completedToday = reports.filter(r => r.status === 'Validated').filter(r => 
     r.validatedAt && new Date(r.validatedAt).toDateString() === new Date().toDateString()
   );
 
@@ -94,3 +100,6 @@ export default function PathologistDashboard() {
     </div>
   );
 }
+
+
+

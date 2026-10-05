@@ -1,4 +1,4 @@
-export type LaboratoryRequestStatus = 'Pending' | 'In Progress' | 'Awaiting Validation' | 'Validated' | 'Rejected';
+export type LaboratoryRequestStatus = 'Pending' | 'In Progress' | 'Awaiting Validation' | 'Awaiting Payment' | 'Validated' | 'Rejected';
 
 export type ResultFlag = 'normal' | 'high' | 'low' | 'critical' | 'abnormal';
 

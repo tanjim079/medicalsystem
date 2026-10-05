@@ -1,13 +1,12 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import MainLayout from "../../layouts/MainLayout";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import { Search, Printer, Download, Trash2, Plus } from "lucide-react";
-import { medicalTests } from "../../data/tests";
 import type { MedicalTest } from "../../data/tests";
-import { mockPatients } from "../../data/mockPatients";
+import { useTestStore } from "../../store/useTestStore";
 import { useBillingStore } from "../../store/useBillingStore";
 import type { Bill } from "../../store/useBillingStore";
 import { useLaboratoryStore } from "../../store/useLaboratoryStore";
@@ -19,24 +18,63 @@ export default function TestBilling() {
   const location = useLocation();
   const prefillData = location.state as { patientId: string, tests: { id: string, name: string }[] } | null;
 
+  const tests = useTestStore((s) => s.tests);
+  const fetchTests = useTestStore((s) => s.fetchTests);
+
+  useEffect(() => {
+    fetchTests();
+  }, [fetchTests]);
+
   const [patientId, setPatientId] = useState(prefillData?.patientId || "");
   const [patientType, setPatientType] = useState<"Student" | "Employee">("Student");
-  const [selectedTests, setSelectedTests] = useState<MedicalTest[]>(
-    prefillData?.tests?.map(t => medicalTests.find(mt => mt.id === t.id)).filter(Boolean) as MedicalTest[] || []
-  );
+  
+  // Since `tests` is loaded asynchronously, initialize selected tests in a useEffect
+  const [selectedTests, setSelectedTests] = useState<MedicalTest[]>([]);
+
+  useEffect(() => {
+    if (prefillData?.tests && tests.length > 0 && selectedTests.length === 0) {
+      const prefilled = prefillData.tests.map(t => tests.find(mt => mt.id === t.id)).filter(Boolean) as MedicalTest[];
+      setSelectedTests(prefilled);
+    }
+  }, [prefillData, tests]);
   const [discount, setDiscount] = useState<number>(0);
   const [tax, setTax] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<"Cash" | "Card" | "Mobile Banking">("Cash");
   const [status, setStatus] = useState<"Paid" | "Due">("Paid");
 
   const [generatedBill, setGeneratedBill] = useState<Bill | null>(null);
+  const [patient, setPatient] = useState<any>(null);
 
   const addBill = useBillingStore((s) => s.addBill);
   const addLaboratoryRequest = useLaboratoryStore((s) => s.addRequest);
   const user = useAuthStore((s) => s.user);
   const printRef = useRef<HTMLDivElement>(null);
 
-  const patient = mockPatients.find((p) => p.universityId.toLowerCase() === patientId.toLowerCase());
+  useEffect(() => {
+    const fetchPatient = async () => {
+      if (!patientId || patientId.trim().length < 4) {
+        setPatient(null);
+        return;
+      }
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+        const res = await fetch(`${API_URL}/patients/${patientId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setPatient({
+            ...data,
+            universityId: data.roll_number || data.employee_id || patientId,
+          });
+        } else {
+          setPatient(null);
+        }
+      } catch (error) {
+        console.error("Failed to fetch patient:", error);
+      }
+    };
+    const timer = setTimeout(fetchPatient, 500);
+    return () => clearTimeout(timer);
+  }, [patientId]);
 
   const getTestPrice = (test: MedicalTest) => patientType === "Student" ? test.studentPrice : test.employeePrice;
 
@@ -48,7 +86,7 @@ export default function TestBilling() {
     const testId = e.target.value;
     if (!testId) return;
 
-    const test = medicalTests.find((t) => t.id === testId);
+    const test = tests.find((t) => t.id === testId);
     if (test && !selectedTests.find((t) => t.id === testId)) {
       setSelectedTests([...selectedTests, test]);
     }
@@ -59,7 +97,7 @@ export default function TestBilling() {
     setSelectedTests(selectedTests.filter((t) => t.id !== id));
   };
 
-  const handleGenerateBill = () => {
+  const handleGenerateBill = async () => {
     if (!patient) {
       alert("Please select a valid patient first.");
       return;
@@ -75,7 +113,7 @@ export default function TestBilling() {
       price: getTestPrice(t)
     }));
 
-    const bill = addBill({
+    const bill = await addBill({
       patientId: patient.universityId,
       patientName: patient.name,
       tests: billItems,
@@ -87,9 +125,14 @@ export default function TestBilling() {
       status,
     });
 
+    if (!bill) {
+      alert("Failed to generate bill.");
+      return;
+    }
+
     // Automatically send billed tests to the laboratory for the pathologist
-    selectedTests.forEach((test) => {
-      addLaboratoryRequest({
+    for (const test of selectedTests) {
+      await addLaboratoryRequest({
         patientId: patient.universityId,
         patientName: patient.name,
         testId: test.id,
@@ -99,7 +142,7 @@ export default function TestBilling() {
         requestedByName: user?.name || "Receptionist",
         priority: "Routine",
       });
-    });
+    }
 
     setGeneratedBill(bill);
     alert(`Bill generated successfully! Invoice ID: ${bill.id}`);
@@ -209,7 +252,7 @@ export default function TestBilling() {
                 defaultValue=""
               >
                 <option value="" disabled>Select a medical test to add...</option>
-                {medicalTests.map((t) => (
+                {tests.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.name} - ৳{getTestPrice(t)}
                   </option>

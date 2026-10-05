@@ -1,17 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "../../layouts/MainLayout";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import { usePrescriptionStore } from "../../store/usePrescriptionStore";
 import type { Prescription } from "../../store/usePrescriptionStore";
 import { Pill, CheckCircle, Clock, Receipt } from "lucide-react";
-import { mockPatients } from "../../data/mockPatients";
 import { useNavigate } from "react-router-dom";
 
 export default function MedicineDispense() {
   const prescriptions = usePrescriptionStore((s) => s.prescriptions);
   const updateStatus = usePrescriptionStore((s) => s.updatePrescriptionStatus);
+  const fetchPrescriptions = usePrescriptionStore((s: any) => s.fetchPrescriptions);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (fetchPrescriptions) {
+        fetchPrescriptions();
+    }
+  }, [fetchPrescriptions]);
 
   const [activeTab, setActiveTab] = useState<"pending" | "dispensed">("pending");
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null);
@@ -20,11 +26,37 @@ export default function MedicineDispense() {
   const dispensedList = prescriptions.filter(p => p.status === "dispensed");
 
   const currentList = activeTab === "pending" ? pendingList : dispensedList;
-  const patient = mockPatients.find((p) => p.universityId.toLowerCase() === selectedPrescription?.patientId.toLowerCase());
 
-  const handleDispense = () => {
+  const [patient, setPatient] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (selectedPrescription?.patientId) {
+      const fetchPatient = async () => {
+          try {
+              const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+              const response = await fetch(`${apiUrl}/patients/${selectedPrescription.patientId}`);
+              if (response.ok) {
+                  const data = await response.json();
+                  setPatient({
+                      id: data.id,
+                      universityId: data.roll_number || "N/A",
+                      name: data.name,
+                      age: data.age || "N/A",
+                  });
+              }
+          } catch (err) {
+              console.error("Failed to fetch patient", err);
+          }
+      };
+      fetchPatient();
+    } else {
+      setPatient(null);
+    }
+  }, [selectedPrescription?.patientId]);
+
+  const handleDispense = async () => {
     if (!selectedPrescription) return;
-    updateStatus(selectedPrescription.id, "dispensed");
+    await updateStatus(selectedPrescription.id, "dispensed");
     alert("Medicines marked as dispensed successfully!");
     setSelectedPrescription(null);
   };

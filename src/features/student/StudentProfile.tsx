@@ -1,4 +1,4 @@
-import type { Patient } from "../../data/mockPatients";
+import type { Patient } from "../../types/patient";
 import { User, Droplet, Phone, Calendar } from "lucide-react";
 
 interface StudentProfileProps {

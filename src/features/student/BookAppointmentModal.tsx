@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   X,
   Calendar as CalendarIcon,
@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useAppointmentStore } from '../../store/useAppointmentStore';
-import { users } from '../../data/users';
+import { useUserStore } from '../../store/useUserStore';
 import type { Appointment } from '../../types/appointment';
 import {
   CONSULTATION_TIME_SLOTS,
@@ -55,8 +55,13 @@ export default function BookAppointmentModal({ onClose }: Props) {
 
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
-  const doctors = users.filter((u) => u.role === 'doctor');
+  const { fetchUsers, getDoctors } = useUserStore();
+  const doctors = getDoctors();
   const selectedDoctor = doctors.find((d) => d.id === doctorId);
+
+  useEffect(() => {
+    fetchUsers('doctor');
+  }, [fetchUsers]);
 
   // 7-day open booking window calculations
   const bookingDays = useMemo(() => getBookingWindow(BOOKING_WINDOW_DAYS), []);
@@ -93,7 +98,7 @@ export default function BookAppointmentModal({ onClose }: Props) {
     setTimeout(() => setCopiedToken(false), 2500);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
 
@@ -116,7 +121,7 @@ export default function BookAppointmentModal({ onClose }: Props) {
     }
 
     if (user && selectedDoctor) {
-      const result = addAppointment({
+      const result = await addAppointment({
         patientId: user.id,
         patientName: user.name,
         doctorId: selectedDoctor.id,

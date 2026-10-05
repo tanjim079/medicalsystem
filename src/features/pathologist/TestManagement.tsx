@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLaboratoryStore } from "../../store/useLaboratoryStore";
 import { useLocation, Link } from "react-router-dom";
 import { Search, Filter } from "lucide-react";
@@ -10,6 +10,11 @@ export default function TestManagement() {
   
   const requests = useLaboratoryStore((s) => s.requests);
   const reports = useLaboratoryStore((s) => s.reports);
+  const fetchLaboratoryData = useLaboratoryStore((s) => s.fetchLaboratoryData);
+
+  useEffect(() => {
+    fetchLaboratoryData();
+  }, [fetchLaboratoryData]);
   
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("All");
@@ -31,6 +36,7 @@ export default function TestManagement() {
       case 'Pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'In Progress': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'Awaiting Validation': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'Awaiting Payment': return 'bg-orange-100 text-orange-800 border-orange-200';
       case 'Validated': return 'bg-green-100 text-green-800 border-green-200';
       case 'Rejected': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -68,6 +74,7 @@ export default function TestManagement() {
             {isReportsView ? (
               <>
                 <option value="Awaiting Validation">Awaiting Validation</option>
+                <option value="Awaiting Payment">Awaiting Payment</option>
                 <option value="Validated">Validated</option>
                 <option value="Rejected">Rejected</option>
               </>
@@ -136,3 +143,4 @@ export default function TestManagement() {
     </div>
   );
 }
+

@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import MainLayout from "../../layouts/MainLayout";
 import StudentProfile from "./StudentProfile";
 import MedicalHistory from "./MedicalHistory";
@@ -5,18 +6,59 @@ import LaboratoryReports from "./LaboratoryReports";
 import MedicalCertificates from "./MedicalCertificates";
 import AppointmentsList from "./AppointmentsList";
 import { useAuthStore } from "../../store/useAuthStore";
-import { mockPatients } from "../../data/mockPatients";
 import Card from "../../components/ui/Card";
 import { Info } from "lucide-react";
 import { siteSettings } from "../../config/siteSettings";
+import type { Patient } from "../../types/patient";
+
+interface PatientDashboardData extends Patient {
+  treatmentHistory?: unknown[];
+  labReports?: unknown[];
+  visitSummary?: {
+    totalVisits: number;
+    lastVisit: string | null;
+  };
+}
 
 export default function StudentDashboard() {
   const user = useAuthStore((s) => s.user);
+  const [patientData, setPatientData] = useState<PatientDashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Find the patient matching the logged-in student's ID
-  const patientData = mockPatients.find(
-    (p) => p.universityId.toLowerCase() === user?.id.toLowerCase()
-  );
+  useEffect(() => {
+    const fetchPatientData = async (id: string) => {
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+        const response = await fetch(`${apiUrl}/patients/${id}?t=${Date.now()}`);
+        if (!response.ok) throw new Error("Failed to fetch");
+        
+        const data = await response.json();
+        
+        // Map to expected frontend structure
+        setPatientData({
+          id: data.id,
+          universityId: data.roll_number || "N/A",
+          name: data.name,
+          phone: data.phone || "N/A",
+          age: data.age || "N/A",
+          bloodGroup: data.blood_group || "N/A",
+          guardianName: data.guardian_name || "N/A",
+          guardianPhone: data.guardian_phone || "N/A",
+          treatmentHistory: data.treatmentHistory || [],
+          labReports: data.labReports || [],
+          visitSummary: data.visitSummary || { totalVisits: 0, lastVisit: null }
+        });
+      } catch (error) {
+        console.error("Error fetching patient profile:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user?.id) {
+      fetchPatientData(user.id);
+    }
+  }, [user]);
 
   return (
     <MainLayout>
@@ -36,12 +78,16 @@ export default function StudentDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* LEFT COLUMN: Profile and Info */}
         <div className="md:col-span-1 space-y-6">
-          {patientData ? (
+          {loading ? (
+            <Card>
+              <p className="text-gray-500 text-center py-4">Loading profile...</p>
+            </Card>
+          ) : patientData ? (
             <StudentProfile patient={patientData} />
           ) : (
             <Card>
               <p className="text-gray-500 text-center py-4">
-                Profile data not found in mock records.
+                Profile data not found in live records.
               </p>
             </Card>
           )}

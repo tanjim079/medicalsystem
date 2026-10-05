@@ -39,6 +39,16 @@ export default function AdminSidebar() {
           Doctors
         </NavLink>
 
+        <NavLink
+          to="/admin/users"
+          className={({ isActive }) =>
+            `px-3 py-2 rounded ${isActive ? "bg-gray-700" : "hover:bg-gray-800"
+            }`
+          }
+        >
+          Users
+        </NavLink>
+
       </nav>
     </aside>
   );

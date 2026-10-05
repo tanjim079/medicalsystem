@@ -32,6 +32,8 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
     navLinks = [
       { name: "Patients", path: "/receptionist/patients" },
       { name: "Billing", path: "/receptionist/billing" },
+      { name: "Billing History", path: "/receptionist/billing-history" },
+      { name: "Reports Clearance", path: "/receptionist/reports" },
       { name: "Pharmacy", path: "/receptionist/pharmacy" },
       { name: "Doctors", path: "/doctors" },
       { name: "Tests", path: "/tests" },
@@ -50,7 +52,7 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
       { name: "Staffs", path: "/staff" },
       { name: "Tests", path: "/tests" },
     ];
-  } else if (user?.role === "student") {
+  } else if (["student", "patient", "teacher", "officer"].includes(user?.role || "")) {
     navLinks = [
       { name: "Dashboard", path: "/student" },
       { name: "Doctors", path: "/doctors" },
@@ -195,3 +197,5 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
     </>
   );
 }
+
+

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
 import { useAppointmentStore } from '../../store/useAppointmentStore';
 import BookAppointmentModal from './BookAppointmentModal';
@@ -21,6 +21,7 @@ import {
 export default function AppointmentsList() {
   const user = useAuthStore((s) => s.user);
   const deleteAppointment = useAppointmentStore((s) => s.deleteAppointment);
+  const fetchAppointments = useAppointmentStore((s) => s.fetchAppointments);
   const allAppointments = useAppointmentStore((s) => s.appointments);
   const appointments = user ? allAppointments.filter((app) => app.patientId === user.id) : [];
 
@@ -29,17 +30,22 @@ export default function AppointmentsList() {
   const [showClearAllConfirm, setShowClearAllConfirm] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const confirmDelete = () => {
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  const confirmDelete = async () => {
     if (deleteTargetId) {
-      deleteAppointment(deleteTargetId);
+      await deleteAppointment(deleteTargetId);
       setDeleteTargetId(null);
     }
   };
 
-  const confirmClearAll = () => {
-    appointments.forEach((app) => deleteAppointment(app.id));
+  const confirmClearAll = async () => {
+    await Promise.all(appointments.map((app) => deleteAppointment(app.id)));
     setShowClearAllConfirm(false);
   };
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {

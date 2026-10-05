@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useLaboratoryStore } from "../../store/useLaboratoryStore";
 import { useAuthStore } from "../../store/useAuthStore";
 import { Link } from "react-router-dom";
@@ -7,6 +8,11 @@ import { FileText } from "lucide-react";
 export default function LaboratoryReports() {
   const user = useAuthStore((s) => s.user);
   const allReports = useLaboratoryStore(s => s.reports);
+  const fetchLaboratoryData = useLaboratoryStore(s => s.fetchLaboratoryData);
+
+  useEffect(() => {
+    fetchLaboratoryData();
+  }, [fetchLaboratoryData]);
   
   if (!user) return null;
 

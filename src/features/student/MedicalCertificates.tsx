@@ -1,11 +1,17 @@
 import { FileText, Download } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect } from "react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { useCertificateStore } from "../../store/useCertificateStore";
 
 export default function MedicalCertificates() {
   const user = useAuthStore((s) => s.user);
   const getCertificatesByPatient = useCertificateStore((s) => s.getCertificatesByPatient);
+  const fetchCertificates = useCertificateStore((s) => s.fetchCertificates);
+
+  useEffect(() => {
+    fetchCertificates();
+  }, [fetchCertificates]);
 
   const certificates = user ? getCertificatesByPatient(user.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) : [];
 

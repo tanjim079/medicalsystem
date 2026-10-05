@@ -1,4 +1,4 @@
-
+﻿import { useEffect } from "react";
 import { Clock, User } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { usePrescriptionStore } from "../../store/usePrescriptionStore";
@@ -7,6 +7,11 @@ import { Link } from "react-router-dom";
 export default function MedicalHistory() {
   const user = useAuthStore((s) => s.user);
   const getPrescriptionsByPatient = usePrescriptionStore((s) => s.getPrescriptionsByPatient);
+  const fetchPrescriptions = usePrescriptionStore((s) => s.fetchPrescriptions);
+
+  useEffect(() => {
+    fetchPrescriptions();
+  }, [fetchPrescriptions]);
 
   // Fetch actual prescriptions for the logged-in student
   const history = user ? getPrescriptionsByPatient(user.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) : [];
@@ -44,13 +49,27 @@ export default function MedicalHistory() {
                 </span>
               </div>
               
-              <div className="mb-4">
-                <p className="text-sm font-medium text-gray-500 uppercase tracking-wider text-xs mb-1">Prescribed Medicines</p>
-                <p className="text-sm text-gray-700 font-medium">
-                  {h.medicines.length > 0
-                    ? h.medicines.map((m) => m.name).join(" • ")
-                    : "No medicines prescribed"}
-                </p>
+              <div className="mb-4 space-y-3">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wider text-xs mb-1">Prescribed Medicines</p>
+                  <p className="text-sm text-gray-700 font-medium">
+                    {h.medicines && h.medicines.length > 0
+                      ? h.medicines.map((m) => m.name).join(" • ")
+                      : "No medicines prescribed"}
+                  </p>
+                </div>
+                {h.tests && h.tests.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wider text-xs mb-1">Prescribed Lab Tests</p>
+                    <div className="flex flex-wrap gap-2">
+                      {h.tests.map((t) => (
+                        <span key={t.id} className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-md">
+                          {t.name}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               
               <div className="flex flex-wrap justify-between items-center gap-4 mt-2 pt-3 border-t border-gray-200">
@@ -80,3 +99,4 @@ export default function MedicalHistory() {
     </div>
   );
 }
+

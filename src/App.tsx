@@ -11,13 +11,16 @@ import StudentDashboard from "./features/student/StudentDashboard";
 import DoctorDashboard from "./features/doctor/DoctorDashboard";
 import PatientManagement from "./features/receptionist/PatientManagement";
 import TestBilling from "./features/receptionist/TestBilling";
+import BillingHistory from "./features/receptionist/BillingHistory";
 import MedicineDispense from "./features/receptionist/MedicineDispense";
+import ReportClearance from "./features/receptionist/ReportClearance";
 import PrescriptionPage from "./pages/PrescriptionPage";
 import ViewPrescriptionPage from "./pages/ViewPrescriptionPage";
 import CreateCertificatePage from "./pages/CreateCertificatePage";
 import ViewCertificatePage from "./pages/ViewCertificatePage";
 import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboard from "./features/admin/AdminDashboard";
+import UsersPage from "./features/admin/users/UsersPage";
 import MedicinesPage from "./features/admin/medicines/MedicinesPage";
 import DoctorsPage from "./features/admin/doctors/DoctorsPage";
 import DoctorLayout from "./layouts/DoctorLayout";
@@ -49,7 +52,9 @@ function App() {
         <Route path="/receptionist/patients" element={<PatientManagement />} />
 
         <Route path="/receptionist/billing" element={<TestBilling />} />
+        <Route path="/receptionist/billing-history" element={<BillingHistory />} />
         <Route path="/receptionist/pharmacy" element={<MedicineDispense />} />
+        <Route path="/receptionist/reports" element={<ReportClearance />} />
         <Route path="/prescription/:id" element={<PrescriptionPage />} />
         <Route path="/prescription/view/:prescriptionId" element={<ViewPrescriptionPage />} />
         <Route path="/certificate/create/:patientId" element={<CreateCertificatePage />} />
@@ -58,6 +63,7 @@ function App() {
 
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<UsersPage />} />
           <Route path="medicines" element={<MedicinesPage />} />
           <Route path="doctors" element={<DoctorsPage />} />
         </Route>
@@ -84,3 +90,4 @@ function App() {
 }
 
 export default App;
+

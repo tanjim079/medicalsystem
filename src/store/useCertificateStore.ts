@@ -1,6 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import { v4 as uuidv4 } from "uuid";
 
 export interface MedicalCertificate {
   id: string;
@@ -16,41 +14,62 @@ export interface MedicalCertificate {
   remarks: string;
 }
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 interface CertificateState {
   certificates: MedicalCertificate[];
-  addCertificate: (cert: Omit<MedicalCertificate, "id" | "date">) => void;
+  loading: boolean;
+  fetchCertificates: () => Promise<void>;
+  addCertificate: (cert: Omit<MedicalCertificate, "id" | "date">) => Promise<MedicalCertificate | null>;
   getCertificatesByPatient: (patientId: string) => MedicalCertificate[];
   getCertificateById: (id: string) => MedicalCertificate | undefined;
 }
 
-export const useCertificateStore = create<CertificateState>()(
-  persist(
-    (set, get) => ({
-      certificates: [],
+export const useCertificateStore = create<CertificateState>()((set, get) => ({
+  certificates: [],
+  loading: false,
 
-      addCertificate: (cert) => {
-        set((state) => ({
-          certificates: [
-            ...state.certificates,
-            {
-              ...cert,
-              id: uuidv4(),
-              date: new Date().toISOString(),
-            },
-          ],
-        }));
-      },
-
-      getCertificatesByPatient: (patientId) => {
-        return get().certificates.filter((c) => c.patientId === patientId);
-      },
-
-      getCertificateById: (id) => {
-        return get().certificates.find((c) => c.id === id);
-      },
-    }),
-    {
-      name: "medical-certificates-storage",
+  fetchCertificates: async () => {
+    set({ loading: true });
+    try {
+      const res = await fetch(`${API_URL}/certificates`);
+      if (res.ok) {
+        const data = await res.json();
+        set({ certificates: data });
+      }
+    } catch (error) {
+      console.error("Error fetching certificates:", error);
+    } finally {
+      set({ loading: false });
     }
-  )
-);
+  },
+
+  addCertificate: async (cert) => {
+    try {
+      const res = await fetch(`${API_URL}/certificates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cert),
+      });
+      if (res.ok) {
+        const newCert = await res.json();
+        set((state) => ({
+          certificates: [...state.certificates, newCert],
+        }));
+        return newCert;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error adding certificate:", error);
+      return null;
+    }
+  },
+
+  getCertificatesByPatient: (patientId) => {
+    return get().certificates.filter((c) => c.patientId === patientId);
+  },
+
+  getCertificateById: (id) => {
+    return get().certificates.find((c) => c.id === id);
+  },
+}));

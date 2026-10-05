@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { useAuthStore } from "../store/useAuthStore";
 import { useCertificateStore } from "../store/useCertificateStore";
-import { mockPatients } from "../data/mockPatients";
 import Card from "../components/ui/Card";
 import { FileText, Calendar, ArrowLeft } from "lucide-react";
 
@@ -13,12 +12,35 @@ export default function CreateCertificatePage() {
   const user = useAuthStore((s) => s.user);
   const addCertificate = useCertificateStore((s) => s.addCertificate);
 
-  const patient = mockPatients.find((p) => p.universityId.toLowerCase() === patientId?.toLowerCase());
+  const [patient, setPatient] = useState<any>(null);
+  const [loadingPatient, setLoadingPatient] = useState(true);
 
   const [diagnosis, setDiagnosis] = useState("");
   const [restStartDate, setRestStartDate] = useState("");
   const [restEndDate, setRestEndDate] = useState("");
   const [remarks, setRemarks] = useState("");
+
+  useEffect(() => {
+    const fetchPatient = async () => {
+      if (!patientId) return;
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+        const res = await fetch(`${API_URL}/patients/${patientId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setPatient({
+            ...data,
+            universityId: data.roll_number || "N/A"
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch patient:", error);
+      } finally {
+        setLoadingPatient(false);
+      }
+    };
+    fetchPatient();
+  }, [patientId]);
 
   const calculateDays = () => {
     if (restStartDate && restEndDate) {
@@ -31,7 +53,7 @@ export default function CreateCertificatePage() {
     return 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!patient || !user) {
@@ -44,7 +66,7 @@ export default function CreateCertificatePage() {
       return;
     }
 
-    addCertificate({
+    const cert = await addCertificate({
       patientId: patient.universityId,
       patientName: patient.name,
       doctorId: user.id,
@@ -56,14 +78,26 @@ export default function CreateCertificatePage() {
       remarks,
     });
 
-    alert("Certificate created successfully!");
-    navigate("/doctor");
+    if (cert) {
+      alert("Certificate created successfully!");
+      navigate("/doctor");
+    } else {
+      alert("Failed to create certificate.");
+    }
   };
+
+  if (loadingPatient) {
+    return (
+      <MainLayout>
+        <div className="text-center py-20 text-gray-500">Loading patient details...</div>
+      </MainLayout>
+    );
+  }
 
   if (!patient) {
     return (
       <MainLayout>
-        <div className="p-8 text-center text-red-500 font-bold">Patient not found.</div>
+        <div className="text-center py-20 text-gray-500">Patient not found</div>
       </MainLayout>
     );
   }

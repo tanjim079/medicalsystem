@@ -1,9 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import { mockPatients } from "../data/mockPatients";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { usePrescriptionStore } from "../store/usePrescriptionStore";
@@ -16,8 +15,30 @@ export default function ViewPrescriptionPage() {
     const prescriptions = usePrescriptionStore((s) => s.prescriptions);
     const prescription = prescriptions.find(p => p.id === prescriptionId);
 
-    // Find patient data based on patientId in the prescription
-    const patient = mockPatients.find((p) => p.universityId.toLowerCase() === prescription?.patientId.toLowerCase());
+    const [patient, setPatient] = useState<any | null>(null);
+
+    useEffect(() => {
+        if (prescription?.patientId) {
+            const fetchPatient = async () => {
+                try {
+                    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+                    const response = await fetch(`${apiUrl}/patients/${prescription.patientId}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        setPatient({
+                            id: data.id,
+                            universityId: data.roll_number || "N/A",
+                            name: data.name,
+                            age: data.age || "N/A",
+                        });
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch patient", err);
+                }
+            };
+            fetchPatient();
+        }
+    }, [prescription?.patientId]);
 
     // 🖨 Print
     const handlePrint = () => {

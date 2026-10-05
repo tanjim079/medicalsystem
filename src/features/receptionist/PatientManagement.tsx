@@ -1,28 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MainLayout from "../../layouts/MainLayout";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import { Search, Plus, Edit2, Eye } from "lucide-react";
-import { mockPatients } from "../../data/mockPatients";
 
 export default function PatientManagement() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [patients, setPatients] = useState(mockPatients);
+  const [allPatients, setAllPatients] = useState<any[]>([]);
+  const [patients, setPatients] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+        const res = await fetch(`${API_URL}/patients`);
+        if (res.ok) {
+          const data = await res.json();
+          // Flatten data
+          const formatted = data.map((d: any) => ({
+            ...d,
+            ...d.patients?.[0], // In case of 1:1 join
+            ...d.patients, // If not array
+            universityId: d.patients?.roll_number || d.patients?.[0]?.roll_number || d.patients?.employee_id || d.patients?.[0]?.employee_id || 'N/A'
+          }));
+          setAllPatients(formatted);
+          setPatients(formatted);
+        }
+      } catch (error) {
+        console.error("Error fetching patients:", error);
+      }
+    };
+    fetchPatients();
+  }, []);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
     
     if (!term) {
-      setPatients(mockPatients);
+      setPatients(allPatients);
       return;
     }
 
-    const filtered = mockPatients.filter(
-      p => p.name.toLowerCase().includes(term) || 
-           p.universityId.toLowerCase().includes(term) ||
-           p.guardianPhone.includes(term) ||
-           p.phone.includes(term)
+    const filtered = allPatients.filter(
+      p => p.name?.toLowerCase().includes(term) || 
+           p.universityId?.toLowerCase().includes(term) ||
+           p.guardian_phone?.includes(term) ||
+           p.phone?.includes(term)
     );
     setPatients(filtered);
   };
@@ -74,15 +98,15 @@ export default function PatientManagement() {
                   <tr key={p.id} className="border-b last:border-0 hover:bg-gray-50">
                     <td className="p-4 text-blue-600 font-medium">{p.universityId}</td>
                     <td className="p-4 font-medium text-gray-800">{p.name}</td>
-                    <td className="p-4 text-gray-600">{p.age} / M</td>
+                    <td className="p-4 text-gray-600">{p.age || 'N/A'}</td>
                     <td className="p-4">
                       <span className="bg-red-50 text-red-700 px-2 py-1 rounded text-xs font-semibold">
-                        {p.bloodGroup}
+                        {p.bloodGroup || p.blood_group || 'N/A'}
                       </span>
                     </td>
                     <td className="p-4 text-gray-600">
-                      <div>{p.phone} (Self)</div>
-                      <div className="text-xs text-gray-400">{p.guardianPhone} (Guardian)</div>
+                      <div>{p.phone || 'N/A'} (Self)</div>
+                      <div className="text-xs text-gray-400">{p.guardianPhone || p.guardian_phone || 'N/A'} (Guardian)</div>
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">

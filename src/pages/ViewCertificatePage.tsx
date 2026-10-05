@@ -1,6 +1,6 @@
+import { useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import { useRef } from "react";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import html2canvas from "html2canvas";
@@ -11,9 +11,15 @@ export default function ViewCertificatePage() {
   const { certificateId } = useParams();
   const navigate = useNavigate();
   const getCertificateById = useCertificateStore((s) => s.getCertificateById);
+  const fetchCertificates = useCertificateStore((s) => s.fetchCertificates);
+  const loading = useCertificateStore((s) => s.loading);
   const certificate = certificateId ? getCertificateById(certificateId) : undefined;
   
   const printRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetchCertificates();
+  }, [fetchCertificates]);
 
   // 🖨 Print
   const handlePrint = () => {
@@ -31,6 +37,14 @@ export default function ViewCertificatePage() {
       pdf.addImage(imgData, "PNG", 10, 10, 190, 0);
       pdf.save(`Medical_Certificate_${certificateId}.pdf`);
   };
+
+  if (loading && !certificate) {
+    return (
+        <MainLayout>
+            <div className="text-center mt-20 text-gray-500">Loading certificate...</div>
+        </MainLayout>
+    );
+  }
 
   if (!certificate) {
     return (

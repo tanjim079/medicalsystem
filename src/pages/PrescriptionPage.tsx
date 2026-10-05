@@ -1,18 +1,17 @@
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
-import { medicines } from "../data/medicines";
-import { mockPatients } from "../data/mockPatients";
+import { useMedicineStore } from "../store/useMedicineStore";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { useAuthStore } from "../store/useAuthStore";
 import { usePrescriptionStore } from "../store/usePrescriptionStore";
-import { useLaboratoryStore } from "../store/useLaboratoryStore";
 import { Edit2, X, Search } from "lucide-react";
-import { medicalTests, type MedicalTest } from "../data/tests";
+import type { MedicalTest } from "../data/tests";
+import { useTestStore } from "../store/useTestStore";
 
 interface PrescriptionItem {
     medicineId: string;
@@ -30,8 +29,39 @@ export default function PrescriptionPage() {
 
     const user = useAuthStore((s) => s.user);
     const addPrescription = usePrescriptionStore((s) => s.addPrescription);
-    const addRequest = useLaboratoryStore((s) => s.addRequest);
-    const patient = mockPatients.find((p) => p.universityId.toLowerCase() === id?.toLowerCase());
+    
+    const { tests: medicalTests, fetchTests } = useTestStore();
+    const { medicines, fetchMedicines } = useMedicineStore();
+
+    const [patient, setPatient] = useState<any | null>(null);
+
+    useEffect(() => {
+        fetchTests();
+        fetchMedicines();
+    }, [fetchTests, fetchMedicines]);
+
+    useEffect(() => {
+        if (id) {
+            const fetchPatient = async () => {
+                try {
+                    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+                    const response = await fetch(`${apiUrl}/patients/${id}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        setPatient({
+                            id: data.id,
+                            universityId: data.roll_number || "N/A",
+                            name: data.name,
+                            age: data.age || "N/A",
+                        });
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch patient", err);
+                }
+            };
+            fetchPatient();
+        }
+    }, [id]);
 
     const [medicinesList, setMedicinesList] = useState<PrescriptionItem[]>([]);
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -91,13 +121,13 @@ export default function PrescriptionPage() {
         setSelectedTests(selectedTests.filter(t => t.id !== id));
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!patient || !id || (medicinesList.length === 0 && selectedTests.length === 0)) {
             alert("Cannot submit an empty prescription.");
             return;
         }
 
-        addPrescription({
+        await addPrescription({
             patientId: id,
             doctorId: user?.id || "unknown",
             doctorName: user?.name || "Doctor",
@@ -107,18 +137,7 @@ export default function PrescriptionPage() {
             advice: advice,
         });
 
-        selectedTests.forEach(test => {
-            addRequest({
-                patientId: id,
-                patientName: patient.name,
-                testId: test.id,
-                testName: test.name,
-                category: test.category,
-                requestedBy: user?.id || "unknown",
-                requestedByName: user?.name || "Doctor",
-                priority: "Routine"
-            });
-        });
+        
 
         setIsSubmitted(true);
         alert("Prescription submitted successfully!");
