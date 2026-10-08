@@ -1,3 +1,4 @@
+import { fetchAuth } from '../../lib/fetchAuth';
 import { useState, useEffect } from "react";
 import MainLayout from "../../layouts/MainLayout";
 import Card from "../../components/ui/Card";
@@ -34,7 +35,7 @@ export default function MedicineDispense() {
       const fetchPatient = async () => {
           try {
               const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-              const response = await fetch(`${apiUrl}/patients/${selectedPrescription.patientId}`);
+              const response = await fetchAuth(`${apiUrl}/patients/${selectedPrescription.patientId}`);
               if (response.ok) {
                   const data = await response.json();
                   setPatient({

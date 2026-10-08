@@ -1,3 +1,4 @@
+import { fetchAuth } from '../lib/fetchAuth';
 import { create } from 'zustand';
 
 export interface PrescriptionMedicine {
@@ -10,6 +11,7 @@ export interface PrescriptionMedicine {
 export interface Prescription {
     id: string;
     patientId: string;
+    patientName: string;
     doctorId: string;
     doctorName: string;
     date: string;
@@ -38,7 +40,7 @@ export const usePrescriptionStore = create<PrescriptionState>()((set, get) => ({
     fetchPrescriptions: async () => {
         set({ loading: true });
         try {
-            const res = await fetch(`${API_URL}/prescriptions`);
+            const res = await fetchAuth(`${API_URL}/prescriptions`);
             if (res.ok) {
                 const data = await res.json();
                 set({ prescriptions: data });
@@ -56,7 +58,7 @@ export const usePrescriptionStore = create<PrescriptionState>()((set, get) => ({
             status: 'pending'
         };
         try {
-            const res = await fetch(`${API_URL}/prescriptions`, {
+            const res = await fetchAuth(`${API_URL}/prescriptions`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -81,7 +83,7 @@ export const usePrescriptionStore = create<PrescriptionState>()((set, get) => ({
     
     updatePrescriptionStatus: async (id, status) => {
         try {
-            const res = await fetch(`${API_URL}/prescriptions/${id}/status`, {
+            const res = await fetchAuth(`${API_URL}/prescriptions/${id}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status })

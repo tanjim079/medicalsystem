@@ -1,3 +1,4 @@
+import { fetchAuth } from '../lib/fetchAuth';
 import { create } from 'zustand';
 
 export interface BillItem {
@@ -38,7 +39,7 @@ export const useBillingStore = create<BillingState>()((set, get) => ({
   fetchBills: async () => {
     set({ loading: true });
     try {
-      const res = await fetch(`${API_URL}/billing`);
+      const res = await fetchAuth(`${API_URL}/billing`);
       if (res.ok) {
         const data = await res.json();
         set({ bills: data });
@@ -57,7 +58,7 @@ export const useBillingStore = create<BillingState>()((set, get) => ({
       date: new Date().toISOString()
     };
     try {
-      const res = await fetch(`${API_URL}/billing`, {
+      const res = await fetchAuth(`${API_URL}/billing`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -76,7 +77,7 @@ export const useBillingStore = create<BillingState>()((set, get) => ({
 
     updateBillStatus: async (id, status) => {
     try {
-      const res = await fetch(`${API_URL}/billing/${id}/status`, {
+      const res = await fetchAuth(`${API_URL}/billing/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })

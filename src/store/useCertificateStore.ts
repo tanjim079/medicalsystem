@@ -1,3 +1,4 @@
+import { fetchAuth } from '../lib/fetchAuth';
 import { create } from "zustand";
 
 export interface MedicalCertificate {
@@ -32,7 +33,7 @@ export const useCertificateStore = create<CertificateState>()((set, get) => ({
   fetchCertificates: async () => {
     set({ loading: true });
     try {
-      const res = await fetch(`${API_URL}/certificates`);
+      const res = await fetchAuth(`${API_URL}/certificates`);
       if (res.ok) {
         const data = await res.json();
         set({ certificates: data });
@@ -46,7 +47,7 @@ export const useCertificateStore = create<CertificateState>()((set, get) => ({
 
   addCertificate: async (cert) => {
     try {
-      const res = await fetch(`${API_URL}/certificates`, {
+      const res = await fetchAuth(`${API_URL}/certificates`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(cert),

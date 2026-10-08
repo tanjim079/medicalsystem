@@ -1,3 +1,4 @@
+import { fetchAuth } from '../lib/fetchAuth';
 import { create } from 'zustand';
 import type { Appointment, AppointmentStatus } from '../types/appointment';
 import { areTimesEqual, formatTimeTo12Hour } from '../utils/timeSlots';
@@ -36,7 +37,7 @@ export const useAppointmentStore = create<AppointmentState>()((set, get) => ({
   fetchAppointments: async () => {
     set({ loading: true });
     try {
-      const response = await fetch(`${API_URL}/appointments`);
+      const response = await fetchAuth(`${API_URL}/appointments`);
       if (!response.ok) throw new Error("Failed to fetch appointments");
       const data = await response.json();
       set({ appointments: data });
@@ -134,7 +135,7 @@ export const useAppointmentStore = create<AppointmentState>()((set, get) => ({
     };
 
     try {
-      const response = await fetch(`${API_URL}/appointments`, {
+      const response = await fetchAuth(`${API_URL}/appointments`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -174,7 +175,7 @@ export const useAppointmentStore = create<AppointmentState>()((set, get) => ({
     }
 
     try {
-      const response = await fetch(`${API_URL}/appointments/${id}/status`, {
+      const response = await fetchAuth(`${API_URL}/appointments/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -201,7 +202,7 @@ export const useAppointmentStore = create<AppointmentState>()((set, get) => ({
 
   deleteAppointment: async (id) => {
     try {
-      await fetch(`${API_URL}/appointments/${id}`, { method: 'DELETE' });
+      await fetchAuth(`${API_URL}/appointments/${id}`, { method: 'DELETE' });
       set((state) => ({
         appointments: state.appointments.filter((app) => app.id !== id),
       }));

@@ -1,3 +1,4 @@
+import { fetchAuth } from '../lib/fetchAuth';
 import { create } from 'zustand';
 import type { MedicalTest } from '../data/tests';
 
@@ -16,7 +17,7 @@ export const useTestStore = create<TestStore>((set, get) => ({
     if (get().tests.length > 0) return; // already fetched
     set({ loading: true });
     try {
-      const res = await fetch(`${API_URL}/tests`);
+      const res = await fetchAuth(`${API_URL}/tests`);
       if (res.ok) {
         const data = await res.json();
         set({ tests: data });

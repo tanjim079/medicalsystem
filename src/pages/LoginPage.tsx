@@ -1,3 +1,4 @@
+import { fetchAuth } from '../lib/fetchAuth';
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
@@ -46,7 +47,7 @@ export default function LoginPage() {
     setError("");
     try {
       const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-      const response = await fetch(`${apiUrl}/auth/login`, {
+      const response = await fetchAuth(`${apiUrl}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

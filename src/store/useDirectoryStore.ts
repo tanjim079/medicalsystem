@@ -1,3 +1,4 @@
+import { fetchAuth } from '../lib/fetchAuth';
 import { create } from 'zustand';
 
 export interface DirectoryMember {
@@ -25,7 +26,7 @@ export const useDirectoryStore = create<DirectoryState>()((set) => ({
     set({ loading: true });
     try {
       const query = category ? `?category=${category}` : '';
-      const response = await fetch(`${API_URL}/directory${query}`);
+      const response = await fetchAuth(`${API_URL}/directory${query}`);
       if (response.ok) {
         const data = await response.json();
         set({ members: data });

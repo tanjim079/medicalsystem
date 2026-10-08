@@ -1,3 +1,4 @@
+import { fetchAuth } from '../lib/fetchAuth';
 import { create } from 'zustand';
 import type { LaboratoryRequest, LaboratoryReport, LaboratoryRequestStatus } from '../types/laboratory';
 
@@ -31,8 +32,8 @@ export const useLaboratoryStore = create<LaboratoryState>()((set, get) => ({
     set({ loading: true });
     try {
       const [reqRes, repRes] = await Promise.all([
-        fetch(`${API_URL}/laboratory/requests`),
-        fetch(`${API_URL}/laboratory/reports`)
+        fetchAuth(`${API_URL}/laboratory/requests`),
+        fetchAuth(`${API_URL}/laboratory/reports`)
       ]);
       
       if (reqRes.ok && repRes.ok) {
@@ -54,7 +55,7 @@ export const useLaboratoryStore = create<LaboratoryState>()((set, get) => ({
       requestedAt: new Date().toISOString()
     };
     try {
-      const res = await fetch(`${API_URL}/laboratory/requests`, {
+      const res = await fetchAuth(`${API_URL}/laboratory/requests`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -73,7 +74,7 @@ export const useLaboratoryStore = create<LaboratoryState>()((set, get) => ({
 
   updateRequestStatus: async (id, status) => {
     try {
-      const res = await fetch(`${API_URL}/laboratory/requests/${id}/status`, {
+      const res = await fetchAuth(`${API_URL}/laboratory/requests/${id}/status`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -95,7 +96,7 @@ export const useLaboratoryStore = create<LaboratoryState>()((set, get) => ({
       id: `REP-${Math.floor(Math.random() * 10000)}`
     };
     try {
-      const res = await fetch(`${API_URL}/laboratory/reports`, {
+      const res = await fetchAuth(`${API_URL}/laboratory/reports`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -114,7 +115,7 @@ export const useLaboratoryStore = create<LaboratoryState>()((set, get) => ({
 
   updateReport: async (id, updates) => {
     try {
-      const res = await fetch(`${API_URL}/laboratory/reports/${id}`, {
+      const res = await fetchAuth(`${API_URL}/laboratory/reports/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updates)
@@ -132,7 +133,7 @@ export const useLaboratoryStore = create<LaboratoryState>()((set, get) => ({
 
   validateReport: async (id) => {
     try {
-      const res = await fetch(`${API_URL}/laboratory/reports/${id}`, {
+      const res = await fetchAuth(`${API_URL}/laboratory/reports/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'Awaiting Payment' })
@@ -150,7 +151,7 @@ export const useLaboratoryStore = create<LaboratoryState>()((set, get) => ({
 
   approveReport: async (id) => {
     try {
-      const res = await fetch(`${API_URL}/laboratory/reports/${id}`, {
+      const res = await fetchAuth(`${API_URL}/laboratory/reports/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'Validated', validatedAt: new Date().toISOString() })

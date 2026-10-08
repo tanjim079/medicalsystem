@@ -1,3 +1,4 @@
+import { fetchAuth } from '../lib/fetchAuth';
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import { useState, useRef, useEffect } from "react";
@@ -45,7 +46,7 @@ export default function PrescriptionPage() {
             const fetchPatient = async () => {
                 try {
                     const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-                    const response = await fetch(`${apiUrl}/patients/${id}`);
+                    const response = await fetchAuth(`${apiUrl}/patients/${id}`);
                     if (response.ok) {
                         const data = await response.json();
                         setPatient({

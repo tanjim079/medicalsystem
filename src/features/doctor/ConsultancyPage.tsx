@@ -1,3 +1,4 @@
+import { fetchAuth } from '../../lib/fetchAuth';
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import PatientDetails from "./PatientDetails";
@@ -38,7 +39,7 @@ export default function ConsultancyPage() {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
         // Search the real backend!
-        const response = await fetch(`${apiUrl}/patients/${id}?t=${Date.now()}`);
+        const response = await fetchAuth(`${apiUrl}/patients/${id}?t=${Date.now()}`);
         
         if (!response.ok) {
           throw new Error("Patient not found");

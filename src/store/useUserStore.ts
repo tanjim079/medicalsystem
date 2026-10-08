@@ -1,3 +1,4 @@
+import { fetchAuth } from '../lib/fetchAuth';
 import { create } from 'zustand';
 
 export interface UserProfile {
@@ -28,7 +29,7 @@ export const useUserStore = create<UserState>()((set, get) => ({
     set({ loading: true });
     try {
       const query = role ? `?role=${role}` : '';
-      const response = await fetch(`${API_URL}/users${query}`);
+      const response = await fetchAuth(`${API_URL}/users${query}`);
       if (response.ok) {
         const data = await response.json();
         set({ users: data });
@@ -46,7 +47,7 @@ export const useUserStore = create<UserState>()((set, get) => ({
 
   addUser: async (userData: Omit<UserProfile, 'id'>) => {
     try {
-      const response = await fetch(`${API_URL}/users`, {
+      const response = await fetchAuth(`${API_URL}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
@@ -62,7 +63,7 @@ export const useUserStore = create<UserState>()((set, get) => ({
 
   updateUser: async (id: string, userData: Partial<UserProfile>) => {
     try {
-      const response = await fetch(`${API_URL}/users/${id}`, {
+      const response = await fetchAuth(`${API_URL}/users/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData),
@@ -80,7 +81,7 @@ export const useUserStore = create<UserState>()((set, get) => ({
 
   deleteUser: async (id: string) => {
     try {
-      const response = await fetch(`${API_URL}/users/${id}`, {
+      const response = await fetchAuth(`${API_URL}/users/${id}`, {
         method: 'DELETE',
       });
       if (response.ok) {

@@ -1,3 +1,4 @@
+import { fetchAuth } from '../../lib/fetchAuth';
 import { useState, useEffect } from "react";
 import MainLayout from "../../layouts/MainLayout";
 import Card from "../../components/ui/Card";
@@ -13,7 +14,7 @@ export default function PatientManagement() {
     const fetchPatients = async () => {
       try {
         const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-        const res = await fetch(`${API_URL}/patients`);
+        const res = await fetchAuth(`${API_URL}/patients`);
         if (res.ok) {
           const data = await res.json();
           // Flatten data

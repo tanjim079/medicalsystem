@@ -1,3 +1,4 @@
+import { fetchAuth } from '../lib/fetchAuth';
 import { create } from 'zustand';
 
 export interface Medicine {
@@ -23,7 +24,7 @@ export const useMedicineStore = create<MedicineState>()((set) => ({
   fetchMedicines: async () => {
     set({ loading: true });
     try {
-      const response = await fetch(`${API_URL}/medicines`);
+      const response = await fetchAuth(`${API_URL}/medicines`);
       if (response.ok) {
         const data = await response.json();
         set({ medicines: data });
@@ -37,7 +38,7 @@ export const useMedicineStore = create<MedicineState>()((set) => ({
 
   updateStock: async (id: string, newStock: number) => {
     try {
-      const response = await fetch(`${API_URL}/medicines/${id}`, {
+      const response = await fetchAuth(`${API_URL}/medicines/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stock: newStock })
@@ -55,7 +56,7 @@ export const useMedicineStore = create<MedicineState>()((set) => ({
 
   addMedicine: async (name: string, stock: number) => {
     try {
-      const response = await fetch(`${API_URL}/medicines`, {
+      const response = await fetchAuth(`${API_URL}/medicines`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, stock })

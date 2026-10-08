@@ -1,3 +1,4 @@
+import { fetchAuth } from '../../lib/fetchAuth';
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import MainLayout from "../../layouts/MainLayout";
@@ -58,7 +59,7 @@ export default function TestBilling() {
       }
       try {
         const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-        const res = await fetch(`${API_URL}/patients/${patientId}`);
+        const res = await fetchAuth(`${API_URL}/patients/${patientId}`);
         if (res.ok) {
           const data = await res.json();
           setPatient({

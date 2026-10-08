@@ -1,7 +1,7 @@
 import { fetchAuth } from '../../lib/fetchAuth';
 import { useState, useEffect } from "react";
 import MainLayout from "../../layouts/MainLayout";
-import StudentProfile from "./StudentProfile";
+import TeacherProfile from "./TeacherProfile";
 import MedicalHistory from "./MedicalHistory";
 import LaboratoryReports from "./LaboratoryReports";
 import MedicalCertificates from "./MedicalCertificates";
@@ -21,7 +21,7 @@ interface PatientDashboardData extends Patient {
   };
 }
 
-export default function StudentDashboard() {
+export default function TeacherDashboard() {
   const user = useAuthStore((s) => s.user);
   const [patientData, setPatientData] = useState<PatientDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,7 +38,8 @@ export default function StudentDashboard() {
         // Map to expected frontend structure
         setPatientData({
           id: data.id,
-          universityId: data.roll_number || "N/A",
+          universityId: data.employee_id || data.roll_number || data.email || "N/A",
+            department: data.department || "N/A",
           name: data.name,
           phone: data.phone || "N/A",
           age: data.age || "N/A",
@@ -66,7 +67,7 @@ export default function StudentDashboard() {
       {/* Welcome Banner */}
       <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 mb-8 shadow-lg">
         <div className="relative z-10">
-          <h1 className="text-3xl font-extrabold text-white mb-2">Student Dashboard</h1>
+          <h1 className="text-3xl font-extrabold text-white mb-2">Teacher Dashboard</h1>
           <p className="text-blue-100 text-lg">
             Welcome back, <span className="font-semibold">{user?.name}</span>
           </p>
@@ -84,7 +85,7 @@ export default function StudentDashboard() {
               <p className="text-gray-500 text-center py-4">Loading profile...</p>
             </Card>
           ) : patientData ? (
-            <StudentProfile patient={patientData} />
+            <TeacherProfile patient={patientData} />
           ) : (
             <Card>
               <p className="text-gray-500 text-center py-4">
