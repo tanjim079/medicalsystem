@@ -21,7 +21,9 @@ export default function PatientManagement() {
             ...d,
             ...d.patients?.[0], // In case of 1:1 join
             ...d.patients, // If not array
-            universityId: d.patients?.roll_number || d.patients?.[0]?.roll_number || d.patients?.employee_id || d.patients?.[0]?.employee_id || 'N/A'
+              ...d.teachers?.[0],
+              ...d.teachers,
+            universityId: d.teachers?.employee_id || d.teachers?.[0]?.employee_id || d.patients?.roll_number || d.patients?.[0]?.roll_number || d.patients?.employee_id || d.patients?.[0]?.employee_id || 'N/A'
           }));
           setAllPatients(formatted);
           setPatients(formatted);

@@ -8,6 +8,7 @@ import PublicDoctorsPage from "./features/doctor/PublicDoctorsPage";
 import PublicStaffPage from "./features/staff/PublicStaffPage";
 import PublicTestsPage from "./features/tests/PublicTestsPage";
 import StudentDashboard from "./features/student/StudentDashboard";
+import TeacherDashboard from "./features/teacher/TeacherDashboard";
 import DoctorDashboard from "./features/doctor/DoctorDashboard";
 import PatientManagement from "./features/receptionist/PatientManagement";
 import TestBilling from "./features/receptionist/TestBilling";
@@ -48,6 +49,7 @@ function App() {
 
         {/* Protected Dashboard Routes (No public layout for these) */}
         <Route path="/student" element={<StudentDashboard />} />
+        <Route path="/teacher" element={<TeacherDashboard />} />
         <Route path="/receptionist" element={<Navigate to="/receptionist/patients" replace />} />
         <Route path="/receptionist/patients" element={<PatientManagement />} />
 

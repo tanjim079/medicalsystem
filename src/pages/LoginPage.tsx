@@ -62,7 +62,8 @@ export default function LoginPage() {
       setUser(userData, data.session.access_token);
       if (userData.role === "doctor") navigate("/doctor", { replace: true });
       else if (userData.role === "admin") navigate("/admin", { replace: true });
-      else if (["patient", "student", "teacher", "officer"].includes(userData.role)) navigate("/student", { replace: true });
+      else if (userData.role === "teacher") navigate("/teacher", { replace: true });
+      else if (["patient", "student", "officer"].includes(userData.role)) navigate("/student", { replace: true });
       else if (userData.role === "receptionist") navigate("/receptionist/patients", { replace: true });
       else if (userData.role === "pathologist") navigate("/pathologist/dashboard", { replace: true });
       else alert(`${userData.role} dashboard not implemented yet`);

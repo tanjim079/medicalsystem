@@ -408,7 +408,7 @@ export default function TestBilling() {
                       <span className="font-semibold text-gray-800">{generatedBill.patientName}</span>
                     </div>
                     <div className="flex bg-gray-50/50 p-2 rounded">
-                      <span className="text-gray-500 font-medium w-24">Student ID:</span>
+                      <span className="text-gray-500 font-medium w-24">ID No.:</span>
                       <span className="font-semibold text-gray-800">{generatedBill.patientId}</span>
                     </div>
                   </div>

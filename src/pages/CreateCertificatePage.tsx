@@ -30,7 +30,7 @@ export default function CreateCertificatePage() {
           const data = await res.json();
           setPatient({
             ...data,
-            universityId: data.roll_number || "N/A"
+            universityId: data.employee_id || data.roll_number || data.email || "N/A"
           });
         }
       } catch (error) {
@@ -67,7 +67,7 @@ export default function CreateCertificatePage() {
     }
 
     const cert = await addCertificate({
-      patientId: patient.universityId,
+      patientId: patient.id,
       patientName: patient.name,
       doctorId: user.id,
       doctorName: user.name,

@@ -1,4 +1,4 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import { Clock, User } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { usePrescriptionStore } from "../../store/usePrescriptionStore";
@@ -54,7 +54,7 @@ export default function MedicalHistory() {
                   <p className="text-sm font-medium text-gray-500 uppercase tracking-wider text-xs mb-1">Prescribed Medicines</p>
                   <p className="text-sm text-gray-700 font-medium">
                     {h.medicines && h.medicines.length > 0
-                      ? h.medicines.map((m) => m.name).join(" • ")
+                      ? h.medicines.map((m) => m.name).join(" � ")
                       : "No medicines prescribed"}
                   </p>
                 </div>

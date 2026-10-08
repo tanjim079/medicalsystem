@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
 import Button from "../components/ui/Button";
@@ -16,6 +16,31 @@ export default function ViewCertificatePage() {
   const certificate = certificateId ? getCertificateById(certificateId) : undefined;
   
   const printRef = useRef<HTMLDivElement>(null);
+
+  const [patient, setPatient] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (certificate?.patientId) {
+      const fetchPatient = async () => {
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+          const response = await fetch(`${apiUrl}/patients/${certificate.patientId}`);
+          if (response.ok) {
+            const data = await response.json();
+            setPatient({
+              id: data.id,
+              universityId: data.employee_id || data.roll_number || data.email || "N/A",
+              name: data.name,
+            });
+          }
+        } catch (error) {
+          console.error("Failed to fetch patient details:", error);
+        }
+      };
+      fetchPatient();
+    }
+  }, [certificate?.patientId]);
+
 
   useEffect(() => {
     fetchCertificates();
@@ -109,8 +134,8 @@ export default function ViewCertificatePage() {
                       <span className="font-semibold text-gray-800">{new Date(certificate.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
                   </div>
                   <div className="flex bg-gray-50/50 p-2 rounded">
-                      <span className="text-gray-500 font-medium w-24">Student ID:</span>
-                      <span className="font-semibold text-gray-800">{certificate.patientId}</span>
+                      <span className="text-gray-500 font-medium w-24">ID No.:</span>
+                      <span className="font-semibold text-gray-800">{patient?.universityId || certificate.patientId}</span>
                   </div>
                   <div className="flex bg-gray-50/50 p-2 rounded">
                       <span className="text-gray-500 font-medium w-24">Ref No:</span>
@@ -122,17 +147,15 @@ export default function ViewCertificatePage() {
               <div className="px-4 py-4 mb-6">
                 <div className="space-y-6 text-base text-gray-800 leading-relaxed font-medium">
                   <p className="text-justify indent-8">
-                    This is to certify that <strong>{certificate.patientName}</strong>, Student ID: <strong>{certificate.patientId}</strong>, 
-                    has been examined by me at the RUET Health Complex.
+                    This is to certify that <strong>{certificate.patientName}</strong> (ID No.: <strong>{patient?.universityId || certificate.patientId}</strong>) has been examined by me at the RUET Health Complex.
                   </p>
                   
                   <p className="text-justify indent-8">
-                    Based on the clinical findings, they have been diagnosed with <span className="font-bold underline decoration-dotted underline-offset-4">{certificate.diagnosis}</span>.
+                    Based on clinical evaluation, the patient has been diagnosed with <span className="font-bold underline decoration-dotted underline-offset-4">{certificate.diagnosis}</span>.
                   </p>
 
                   <p className="text-justify indent-8">
-                    I strongly recommend that they be granted a medical leave of absence for <strong>{certificate.recommendedRestDays} days</strong>, 
-                    starting from <strong>{new Date(certificate.restStartDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</strong> to <strong>{new Date(certificate.restEndDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</strong> for proper rest and recovery.
+                    A medical leave of absence is strongly recommended for a period of <strong>{certificate.recommendedRestDays} days</strong>, commencing on <strong>{new Date(certificate.restStartDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</strong> and concluding on <strong>{new Date(certificate.restEndDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</strong>, to ensure proper rest and recovery.
                   </p>
                 </div>
               </div>

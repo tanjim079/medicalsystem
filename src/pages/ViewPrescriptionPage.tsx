@@ -27,7 +27,7 @@ export default function ViewPrescriptionPage() {
                         const data = await response.json();
                         setPatient({
                             id: data.id,
-                            universityId: data.roll_number || "N/A",
+                            universityId: data.employee_id || data.roll_number || data.email || "N/A",
                             name: data.name,
                             age: data.age || "N/A",
                         });
@@ -113,8 +113,8 @@ export default function ViewPrescriptionPage() {
                                     <span className="font-semibold text-gray-800">{new Date(prescription.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
                                 </div>
                                 <div className="flex bg-gray-50/50 p-2 rounded">
-                                    <span className="text-gray-500 font-medium w-24">Student ID:</span>
-                                    <span className="font-semibold text-gray-800">{prescription.patientId}</span>
+                                    <span className="text-gray-500 font-medium w-24">ID No.:</span>
+                                    <span className="font-semibold text-gray-800">{patient?.universityId || prescription?.patientId}</span>
                                 </div>
                                 <div className="flex bg-gray-50/50 p-2 rounded">
                                     <span className="text-gray-500 font-medium w-24">Age:</span>

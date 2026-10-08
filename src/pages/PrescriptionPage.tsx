@@ -50,7 +50,7 @@ export default function PrescriptionPage() {
                         const data = await response.json();
                         setPatient({
                             id: data.id,
-                            universityId: data.roll_number || "N/A",
+                            universityId: data.employee_id || data.roll_number || data.email || "N/A",
                             name: data.name,
                             age: data.age || "N/A",
                         });
@@ -128,7 +128,8 @@ export default function PrescriptionPage() {
         }
 
         await addPrescription({
-            patientId: id,
+            patientId: patient?.id || id,
+            patientName: patient?.name || 'Unknown Patient',
             doctorId: user?.id || "unknown",
             doctorName: user?.name || "Doctor",
             problem: problem,
@@ -171,7 +172,7 @@ export default function PrescriptionPage() {
             </button>
 
             <h1 className="text-2xl font-bold mb-4 print:hidden">
-                Prescription for {id}
+                Prescription for {patient?.universityId || id}
             </h1>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:block">
@@ -384,8 +385,8 @@ export default function PrescriptionPage() {
                                     <span className="font-semibold text-gray-800">{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
                                 </div>
                                 <div className="flex bg-gray-50/50 p-2 rounded">
-                                    <span className="text-gray-500 font-medium w-24">Student ID:</span>
-                                    <span className="font-semibold text-gray-800">{id}</span>
+                                    <span className="text-gray-500 font-medium w-24">ID No.:</span>
+                                    <span className="font-semibold text-gray-800">{patient?.universityId || id}</span>
                                 </div>
                                 <div className="flex bg-gray-50/50 p-2 rounded">
                                     <span className="text-gray-500 font-medium w-24">Age:</span>

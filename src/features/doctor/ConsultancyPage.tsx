@@ -49,7 +49,7 @@ export default function ConsultancyPage() {
         // Map backend data to frontend expected format
         const mappedPatient: ConsultancyPatient = {
           id: data.id,
-          universityId: data.roll_number || "N/A",
+          universityId: data.employee_id || data.roll_number || data.email || "N/A",
           name: data.name,
           phone: data.phone || "N/A",
           age: data.age || "N/A",
@@ -89,7 +89,7 @@ export default function ConsultancyPage() {
       alert("Select a patient first");
       return;
     }
-    navigate(`/prescription/${selectedPatient.universityId}`);
+    navigate(`/prescription/${selectedPatient.id}`);
   };
 
   return (
@@ -133,7 +133,7 @@ export default function ConsultancyPage() {
                   Prescription
                 </button>
                 <button
-                  onClick={() => navigate(`/certificate/create/${selectedPatient.universityId}`)}
+                  onClick={() => navigate(`/certificate/create/${selectedPatient.id}`)}
                   className="bg-emerald-600 text-white px-5 py-3 rounded-xl hover:bg-emerald-700 hover:shadow-lg transition-all duration-200 flex-1 text-sm font-bold shadow-md flex justify-center items-center gap-2 group"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:scale-110 transition-transform"><path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v10"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 15v5"></path><path d="M7 17.5l3-2.5 3 2.5"></path></svg>

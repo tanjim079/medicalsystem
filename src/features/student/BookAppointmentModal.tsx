@@ -241,7 +241,7 @@ export default function BookAppointmentModal({ onClose }: Props) {
             <div className="p-3.5 bg-blue-50/70 border border-blue-100 rounded-xl text-xs text-blue-800 flex items-start gap-2.5">
               <Sparkles size={16} className="text-blue-600 mt-0.5 flex-shrink-0" />
               <span>
-                Please arrive at the RUET Medical Complex 10 minutes prior to your time. Keep your Student ID card and this Serial Token ready at the OPD desk.
+                Please arrive at the RUET Medical Complex 10 minutes prior to your time. Keep your ID card and this Serial Token ready at the OPD desk.
               </span>
             </div>
 
