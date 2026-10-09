@@ -397,7 +397,7 @@ export default function TestBilling() {
                     </div>
                     <div className="text-right w-32">
                       <h1 className="text-2xl font-bold text-gray-300 uppercase">INVOICE</h1>
-                      <p className="font-bold text-gray-800 mt-1">{generatedBill.id}</p>
+                      <p className="font-bold text-gray-800 mt-1">{generatedBill.id.substring(0, 8).toUpperCase()}</p>
                       <p className="text-xs text-gray-500">{new Date(generatedBill.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                     </div>
                   </div>

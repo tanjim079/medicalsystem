@@ -1,4 +1,4 @@
-import { fetchAuth } from '../../lib/fetchAuth';
+﻿import { fetchAuth } from '../../lib/fetchAuth';
 import { useState, useEffect } from "react";
 import MainLayout from "../../layouts/MainLayout";
 import Card from "../../components/ui/Card";
@@ -7,11 +7,20 @@ import { usePrescriptionStore } from "../../store/usePrescriptionStore";
 import type { Prescription } from "../../store/usePrescriptionStore";
 import { Pill, CheckCircle, Clock, Receipt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import PatientIdLabel from "./PatientIdLabel";
+
+interface PatientInfo {
+  id: number | string;
+  universityId: string;
+  name: string;
+  age: number | string;
+}
+
 
 export default function MedicineDispense() {
   const prescriptions = usePrescriptionStore((s) => s.prescriptions);
   const updateStatus = usePrescriptionStore((s) => s.updatePrescriptionStatus);
-  const fetchPrescriptions = usePrescriptionStore((s: any) => s.fetchPrescriptions);
+  const fetchPrescriptions = usePrescriptionStore((s) => s.fetchPrescriptions);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,15 +37,19 @@ export default function MedicineDispense() {
 
   const currentList = activeTab === "pending" ? pendingList : dispensedList;
 
-  const [patient, setPatient] = useState<any | null>(null);
+  const [patient, setPatient] = useState<PatientInfo | null>(null);
+  
+  
+
 
   useEffect(() => {
+    let active = true;
     if (selectedPrescription?.patientId) {
       const fetchPatient = async () => {
           try {
               const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
               const response = await fetchAuth(`${apiUrl}/patients/${selectedPrescription.patientId}`);
-              if (response.ok) {
+              if (response.ok && active) {
                   const data = await response.json();
                   setPatient({
                       id: data.id,
@@ -50,9 +63,8 @@ export default function MedicineDispense() {
           }
       };
       fetchPatient();
-    } else {
-      setPatient(null);
     }
+    return () => { active = false; };
   }, [selectedPrescription?.patientId]);
 
   const handleDispense = async () => {
@@ -60,6 +72,7 @@ export default function MedicineDispense() {
     await updateStatus(selectedPrescription.id, "dispensed");
     alert("Medicines marked as dispensed successfully!");
     setSelectedPrescription(null);
+    setPatient(null);
   };
 
   return (
@@ -100,12 +113,12 @@ export default function MedicineDispense() {
                 currentList.map(p => (
                   <div 
                     key={p.id}
-                    onClick={() => setSelectedPrescription(p)}
+                    onClick={() => { setSelectedPrescription(p); setPatient(null); }}
                     className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedPrescription?.id === p.id ? "border-blue-500 bg-blue-50" : "hover:border-gray-300 hover:bg-gray-50"}`}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h3 className="font-bold text-gray-800">ID No.: {p.patientId}</h3>
+                        <h3 className="font-bold text-gray-800">ID No.: <PatientIdLabel patientId={p.patientId} /></h3>
                         <p className="text-xs text-gray-500">Dr. {p.doctorName}</p>
                       </div>
                       <span className="text-xs font-semibold bg-gray-200 text-gray-700 px-2 py-1 rounded">
@@ -165,7 +178,7 @@ export default function MedicineDispense() {
                                 </div>
                                 <div className="flex bg-gray-50/50 p-2 rounded">
                                     <span className="text-gray-500 font-medium w-20">ID No.:</span>
-                                    <span className="font-semibold text-gray-800">{selectedPrescription.patientId}</span>
+                                    <span className="font-semibold text-gray-800">{patient?.universityId && patient.universityId !== "N/A" ? patient.universityId : selectedPrescription.patientId.substring(0, 8).toUpperCase()}</span>
                                 </div>
                                 <div className="flex bg-gray-50/50 p-2 rounded">
                                     <span className="text-gray-500 font-medium w-20">Age:</span>
@@ -186,7 +199,7 @@ export default function MedicineDispense() {
 
                             {/* Rx Symbol */}
                             <div className="mb-4 flex items-center">
-                                <span className="text-3xl font-serif font-bold text-blue-900">℞</span>
+                                <span className="text-3xl font-serif font-bold text-blue-900"></span>
                             </div>
 
                             {/* Medicines */}
@@ -202,7 +215,7 @@ export default function MedicineDispense() {
                                                     <div className="font-bold text-gray-800 text-sm">{m.name}</div>
                                                     <div className="text-xs text-gray-600 mt-1 flex items-center">
                                                         <span className="font-semibold px-2 py-0.5 bg-blue-50 border border-blue-100 rounded text-blue-900">{m.dosage}</span>
-                                                        <span className="mx-2 text-gray-400">—</span>
+                                                        <span className="mx-2 text-gray-400"></span>
                                                         <span className="text-gray-600 font-medium">{m.days} days</span>
                                                     </div>
                                                 </div>
@@ -222,7 +235,7 @@ export default function MedicineDispense() {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 pl-2">
                                         {selectedPrescription.tests.map((t) => (
                                             <div key={t.id} className="text-xs text-gray-800 flex items-start">
-                                                <span className="text-blue-600 mr-2 font-bold">•</span> 
+                                                <span className="text-blue-600 mr-2 font-bold"></span> 
                                                 <span className="leading-snug">{t.name}</span>
                                             </div>
                                         ))}

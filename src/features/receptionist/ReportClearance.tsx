@@ -89,7 +89,7 @@ export default function ReportClearance() {
                         if (!relatedBill) return <span className="text-xs text-gray-400">No bill found</span>;
                         return (
                           <div className="flex flex-col">
-                            <span className="text-xs text-gray-500 font-mono">{relatedBill.id}</span>
+                            <span className="text-xs text-gray-500 font-mono">{relatedBill.id.substring(0, 8).toUpperCase()}</span>
                             {relatedBill.status === 'Paid' ? (
                               <span className="inline-flex items-center gap-1 text-xs text-green-600 font-medium">
                                 <CheckCircle size={12} /> Paid

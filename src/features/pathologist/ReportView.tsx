@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useLaboratoryStore } from "../../store/useLaboratoryStore";
 import { useAuthStore } from "../../store/useAuthStore";
@@ -14,6 +14,12 @@ export default function ReportView() {
   const user = useAuthStore((s) => s.user);
   const report = useLaboratoryStore((s) => s.reports.find(r => r.id === id));
   const validateReport = useLaboratoryStore((s) => s.validateReport);
+
+  const fetchLaboratoryData = useLaboratoryStore((s) => s.fetchLaboratoryData);
+
+  useEffect(() => {
+    fetchLaboratoryData();
+  }, [fetchLaboratoryData]);
 
   if (!report) {
     return <div className="p-8 text-center text-gray-500">Report not found.</div>;
@@ -112,7 +118,7 @@ export default function ReportView() {
             </div>
             <div className="flex">
               <span className="font-semibold text-gray-600 w-32">Report ID:</span>
-              <span className="text-gray-900 font-medium">{report.id}</span>
+              <span className="text-gray-900 font-medium">{report.id.substring(0, 8).toUpperCase()}</span>
             </div>
           </div>
 

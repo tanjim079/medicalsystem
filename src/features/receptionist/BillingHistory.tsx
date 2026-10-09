@@ -106,7 +106,7 @@ export default function BillingHistory() {
               ) : (
                 filteredBills.map((bill) => (
                   <tr key={bill.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="p-4 font-medium text-blue-600">{bill.id}</td>
+                    <td className="p-4 font-medium text-blue-600">{bill.id.substring(0, 8).toUpperCase()}</td>
                     <td className="p-4">
                       <p className="font-medium text-gray-900">{bill.patientName}</p>
                       <p className="text-xs text-gray-500">{bill.patientId}</p>

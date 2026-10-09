@@ -129,7 +129,7 @@ export default function PrescriptionPage() {
         }
 
         await addPrescription({
-            patientId: patient?.id || id,
+            patientId: patient?.universityId || id,
             patientName: patient?.name || 'Unknown Patient',
             doctorId: user?.id || "unknown",
             doctorName: user?.name || "Doctor",

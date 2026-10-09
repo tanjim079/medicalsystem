@@ -114,10 +114,10 @@ export default function TestManagement() {
                     <td className="p-4 text-sm text-gray-600">
                       {new Date(item.requestedAt).toLocaleDateString()}
                     </td>
-                    <td className="p-4 text-sm font-medium text-gray-900">{item.id}</td>
+                    <td className="p-4 text-sm font-medium text-gray-900">{item.patientId}</td>
                     <td className="p-4 text-sm">
                       <div className="font-medium text-gray-900">{item.patientName}</div>
-                      <div className="text-xs text-gray-500">{item.patientId}</div>
+                      <div className="text-xs text-gray-500"></div>
                     </td>
                     <td className="p-4 text-sm text-gray-700">{item.testName}</td>
                     <td className="p-4 text-sm">
