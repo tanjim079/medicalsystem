@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fetchAuth } from "../../lib/fetchAuth";
 import { useLaboratoryStore } from "../../store/useLaboratoryStore";
 import { useAuthStore } from "../../store/useAuthStore";
 import { Link } from "react-router-dom";
@@ -18,7 +19,7 @@ export default function LaboratoryReports() {
       const fetchPatientInfo = async () => {
         try {
           const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-          const res = await fetch(`${apiUrl}/patients/${user.id}`);
+          const res = await fetchAuth(`${apiUrl}/patients/${user.id}`);
           if (res.ok) {
             const data = await res.json();
             setUniversityId(data.roll_number || data.employee_id || data.email || null);
