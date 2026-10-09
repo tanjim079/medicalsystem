@@ -53,7 +53,7 @@ export default function TestBilling() {
 
   useEffect(() => {
     const fetchPatient = async () => {
-      if (!patientId || patientId.trim().length < 4) {
+      if (!patientId || patientId.trim().length < 2) {
         setPatient(null);
         return;
       }
