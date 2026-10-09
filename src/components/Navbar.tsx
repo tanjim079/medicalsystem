@@ -30,7 +30,6 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
 
   if (user?.role === "receptionist") {
     navLinks = [
-      { name: "Patients", path: "/receptionist/patients" },
       { name: "Billing", path: "/receptionist/billing" },
       { name: "Billing History", path: "/receptionist/billing-history" },
       { name: "Reports Clearance", path: "/receptionist/reports" },

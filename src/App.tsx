@@ -10,7 +10,7 @@ import PublicTestsPage from "./features/tests/PublicTestsPage";
 import StudentDashboard from "./features/student/StudentDashboard";
 import TeacherDashboard from "./features/teacher/TeacherDashboard";
 import DoctorDashboard from "./features/doctor/DoctorDashboard";
-import PatientManagement from "./features/receptionist/PatientManagement";
+
 import TestBilling from "./features/receptionist/TestBilling";
 import BillingHistory from "./features/receptionist/BillingHistory";
 import MedicineDispense from "./features/receptionist/MedicineDispense";
@@ -50,8 +50,8 @@ function App() {
         {/* Protected Dashboard Routes (No public layout for these) */}
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/teacher" element={<TeacherDashboard />} />
-        <Route path="/receptionist" element={<Navigate to="/receptionist/patients" replace />} />
-        <Route path="/receptionist/patients" element={<PatientManagement />} />
+        <Route path="/receptionist" element={<Navigate to="/receptionist/billing" replace />} />
+
 
         <Route path="/receptionist/billing" element={<TestBilling />} />
         <Route path="/receptionist/billing-history" element={<BillingHistory />} />
