@@ -57,7 +57,7 @@ export default function LoginPage() {
       const userData = {
         id: data.user.id,
         name: data.user.user_metadata?.name || "User",
-        role: data.user.user_metadata?.role || "patient",
+        role: String(data.user.user_metadata?.role || data.user.app_metadata?.role || data.user.role || "patient").toLowerCase().trim(),
         email: data.user.email,
       };
       setUser(userData, data.session.access_token);
@@ -65,7 +65,7 @@ export default function LoginPage() {
       else if (userData.role === "admin") navigate("/admin", { replace: true });
       else if (userData.role === "teacher") navigate("/teacher", { replace: true });
       else if (["patient", "student", "officer"].includes(userData.role)) navigate("/student", { replace: true });
-      else if (userData.role === "receptionist") navigate("/receptionist/patients", { replace: true });
+      else if (userData.role === "receptionist") navigate("/receptionist/billing", { replace: true });
       else if (userData.role === "pathologist") navigate("/pathologist/dashboard", { replace: true });
       else alert(`${userData.role} dashboard not implemented yet`);
     } catch (err: unknown) {
@@ -355,7 +355,7 @@ export default function LoginPage() {
                     {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                   </button>
                 </div>
-                <p className="text-xs text-gray-400 pl-1">Students: use registration number as password</p>
+                <p className="text-xs text-gray-400 pl-1">Students: use provided password from RUET authority.</p>
               </div>
 
               {/* Submit */}

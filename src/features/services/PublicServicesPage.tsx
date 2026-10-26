@@ -1,4 +1,19 @@
-import { Activity, Clock, Users, FileText, CheckCircle, Stethoscope, Brain, Eye, UserPlus, FileHeart, Truck } from "lucide-react";
+import { Link } from "react-router-dom";
+import {
+  Activity,
+  Clock,
+  Users,
+  FileText,
+  CheckCircle,
+  Stethoscope,
+  Brain,
+  Eye,
+  UserPlus,
+  FileHeart,
+  Truck,
+  HeartHandshake,
+  ArrowRight,
+} from "lucide-react";
 
 export default function PublicServicesPage() {
   const services = [
@@ -85,14 +100,14 @@ export default function PublicServicesPage() {
 
       <div className="space-y-8">
         {services.map((service) => {
-          const colorStyles: Record<string, { bg: string, border: string, text: string, iconBg: string }> = {
-            blue: { bg: 'bg-blue-50', border: 'border-blue-100', text: 'text-blue-900', iconBg: 'text-blue-600' },
-            indigo: { bg: 'bg-indigo-50', border: 'border-indigo-100', text: 'text-indigo-900', iconBg: 'text-indigo-600' },
-            teal: { bg: 'bg-teal-50', border: 'border-teal-100', text: 'text-teal-900', iconBg: 'text-teal-600' },
-            emerald: { bg: 'bg-emerald-50', border: 'border-emerald-100', text: 'text-emerald-900', iconBg: 'text-emerald-600' },
-            orange: { bg: 'bg-orange-50', border: 'border-orange-100', text: 'text-orange-900', iconBg: 'text-orange-600' },
-            rose: { bg: 'bg-rose-50', border: 'border-rose-100', text: 'text-rose-900', iconBg: 'text-rose-600' },
-            red: { bg: 'bg-red-50', border: 'border-red-100', text: 'text-red-900', iconBg: 'text-red-600' },
+          const colorStyles: Record<string, { bg: string; border: string; text: string; iconBg: string }> = {
+            blue: { bg: "bg-blue-50", border: "border-blue-100", text: "text-blue-900", iconBg: "text-blue-600" },
+            indigo: { bg: "bg-indigo-50", border: "border-indigo-100", text: "text-indigo-900", iconBg: "text-indigo-600" },
+            teal: { bg: "bg-teal-50", border: "border-teal-100", text: "text-teal-900", iconBg: "text-teal-600" },
+            emerald: { bg: "bg-emerald-50", border: "border-emerald-100", text: "text-emerald-900", iconBg: "text-emerald-600" },
+            orange: { bg: "bg-orange-50", border: "border-orange-100", text: "text-orange-900", iconBg: "text-orange-600" },
+            rose: { bg: "bg-rose-50", border: "border-rose-100", text: "text-rose-900", iconBg: "text-rose-600" },
+            red: { bg: "bg-red-50", border: "border-red-100", text: "text-red-900", iconBg: "text-red-600" },
           };
 
           const styles = colorStyles[service.color] || colorStyles.blue;
@@ -140,8 +155,36 @@ export default function PublicServicesPage() {
                 </div>
               </div>
             </div>
-          )
+          );
         })}
+      </div>
+
+      {/* 🔷 External Diagnostic Partnerships (MoU) Card */}
+      <div className="mt-12 bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-2xl p-6 md:p-8 shadow-md flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-teal-400 text-slate-900 flex items-center justify-center shrink-0">
+            <HeartHandshake size={26} />
+          </div>
+          <div>
+            <span className="text-teal-300 text-xs font-bold uppercase tracking-wider">
+              External Diagnostic Facilities
+            </span>
+            <h3 className="text-xl font-bold text-white mt-0.5">
+              Healthcare MoU Partner Concessions
+            </h3>
+            <p className="text-slate-300 text-sm mt-1 max-w-2xl leading-relaxed">
+              For diagnostic investigations not available inside RUET Health Complex (e.g. MRI, CT Scan, OPG, Echo Doppler, Endoscopy), RUET students, faculty, and staff receive <strong>20% to 40% discount</strong> at Popular Diagnostic Centre and Islami Bank Hospital.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          to="/mou"
+          className="inline-flex items-center gap-2 bg-teal-400 hover:bg-teal-300 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-sm shrink-0 transition-all shadow-sm"
+        >
+          <span>View MoU Discounts</span>
+          <ArrowRight size={15} />
+        </Link>
       </div>
     </div>
   );

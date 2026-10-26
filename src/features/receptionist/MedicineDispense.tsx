@@ -1,4 +1,4 @@
-﻿import { fetchAuth } from '../../lib/fetchAuth';
+import { fetchAuth } from '../../lib/fetchAuth';
 import { useState, useEffect } from "react";
 import MainLayout from "../../layouts/MainLayout";
 import Card from "../../components/ui/Card";
@@ -16,7 +16,6 @@ interface PatientInfo {
   age: number | string;
 }
 
-
 export default function MedicineDispense() {
   const prescriptions = usePrescriptionStore((s) => s.prescriptions);
   const updateStatus = usePrescriptionStore((s) => s.updatePrescriptionStatus);
@@ -25,7 +24,7 @@ export default function MedicineDispense() {
 
   useEffect(() => {
     if (fetchPrescriptions) {
-        fetchPrescriptions();
+      fetchPrescriptions();
     }
   }, [fetchPrescriptions]);
 
@@ -36,40 +35,73 @@ export default function MedicineDispense() {
   const dispensedList = prescriptions.filter(p => p.status === "dispensed");
 
   const currentList = activeTab === "pending" ? pendingList : dispensedList;
+  const activePrescription = selectedPrescription || (currentList.length > 0 ? currentList[0] : null);
 
   const [patient, setPatient] = useState<PatientInfo | null>(null);
-  
-  
-
+  const [loadingPatient, setLoadingPatient] = useState(false);
 
   useEffect(() => {
     let active = true;
-    if (selectedPrescription?.patientId) {
-      const fetchPatient = async () => {
-          try {
-              const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-              const response = await fetchAuth(`${apiUrl}/patients/${selectedPrescription.patientId}`);
-              if (response.ok && active) {
-                  const data = await response.json();
-                  setPatient({
-                      id: data.id,
-                      universityId: data.roll_number || "N/A",
-                      name: data.name,
-                      age: data.age || "N/A",
-                  });
-              }
-          } catch (err) {
-              console.error("Failed to fetch patient", err);
-          }
-      };
-      fetchPatient();
+    const targetPatientId = activePrescription?.patientId;
+    const fallbackName = activePrescription?.patientName;
+
+    if (!targetPatientId) {
+      return;
     }
+
+    const fetchPatient = async () => {
+      setLoadingPatient(true);
+      try {
+        const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+        const response = await fetchAuth(`${apiUrl}/patients/${targetPatientId}`);
+        if (response.ok && active) {
+          const data = await response.json();
+          let calculatedAge = data.age;
+          if ((!calculatedAge || calculatedAge === "N/A") && data.date_of_birth) {
+            const dob = new Date(data.date_of_birth);
+            if (!isNaN(dob.getTime())) {
+              const diffMs = Date.now() - dob.getTime();
+              const ageDt = new Date(diffMs);
+              calculatedAge = Math.abs(ageDt.getUTCFullYear() - 1970);
+            }
+          }
+
+          setPatient({
+            id: data.id,
+            universityId: data.roll_number || data.employee_id || data.registration_number || data.email || "N/A",
+            name: data.name || (fallbackName && fallbackName !== "Unknown Patient" ? fallbackName : "Unknown"),
+            age: calculatedAge && calculatedAge !== "N/A" ? calculatedAge : "N/A",
+          });
+        } else if (active) {
+          setPatient({
+            id: targetPatientId,
+            universityId: !targetPatientId.includes("-") ? targetPatientId : "N/A",
+            name: fallbackName && fallbackName !== "Unknown Patient" ? fallbackName : "Unknown",
+            age: "N/A",
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch patient", err);
+        if (active) {
+          setPatient({
+            id: targetPatientId,
+            universityId: !targetPatientId.includes("-") ? targetPatientId : "N/A",
+            name: fallbackName && fallbackName !== "Unknown Patient" ? fallbackName : "Unknown",
+            age: "N/A",
+          });
+        }
+      } finally {
+        if (active) setLoadingPatient(false);
+      }
+    };
+
+    fetchPatient();
     return () => { active = false; };
-  }, [selectedPrescription?.patientId]);
+  }, [activePrescription?.id, activePrescription?.patientId, activePrescription?.patientName]);
 
   const handleDispense = async () => {
-    if (!selectedPrescription) return;
-    await updateStatus(selectedPrescription.id, "dispensed");
+    if (!activePrescription) return;
+    await updateStatus(activePrescription.id, "dispensed");
     alert("Medicines marked as dispensed successfully!");
     setSelectedPrescription(null);
     setPatient(null);
@@ -90,13 +122,13 @@ export default function MedicineDispense() {
           <Card className="flex-1 flex flex-col overflow-hidden p-0">
             <div className="flex border-b">
               <button 
-                onClick={() => setActiveTab("pending")}
+                onClick={() => { setActiveTab("pending"); setSelectedPrescription(null); }}
                 className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 ${activeTab === "pending" ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:bg-gray-50"}`}
               >
                 <Clock size={16} /> Pending ({pendingList.length})
               </button>
               <button 
-                onClick={() => setActiveTab("dispensed")}
+                onClick={() => { setActiveTab("dispensed"); setSelectedPrescription(null); }}
                 className={`flex-1 py-3 text-sm font-semibold flex items-center justify-center gap-2 ${activeTab === "dispensed" ? "text-green-600 border-b-2 border-green-600" : "text-gray-500 hover:bg-gray-50"}`}
               >
                 <CheckCircle size={16} /> Dispensed ({dispensedList.length})
@@ -113,13 +145,13 @@ export default function MedicineDispense() {
                 currentList.map(p => (
                   <div 
                     key={p.id}
-                    onClick={() => { setSelectedPrescription(p); setPatient(null); }}
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${selectedPrescription?.id === p.id ? "border-blue-500 bg-blue-50" : "hover:border-gray-300 hover:bg-gray-50"}`}
+                    onClick={() => { setSelectedPrescription(p); }}
+                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${activePrescription?.id === p.id ? "border-blue-500 bg-blue-50" : "hover:border-gray-300 hover:bg-gray-50"}`}
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <h3 className="font-bold text-gray-800">ID No.: <PatientIdLabel patientId={p.patientId} /></h3>
-                        <p className="text-xs text-gray-500">Dr. {p.doctorName}</p>
+                        <p className="text-xs text-gray-500">{p.doctorName?.startsWith("Dr.") ? p.doctorName : `Dr. ${p.doctorName || "Doctor"}`}</p>
                       </div>
                       <span className="text-xs font-semibold bg-gray-200 text-gray-700 px-2 py-1 rounded">
                         {new Date(p.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -136,12 +168,12 @@ export default function MedicineDispense() {
         {/* RIGHT PANEL: Details */}
         <div className="lg:col-span-7 h-[calc(100vh-140px)]">
           <Card className="h-full overflow-hidden flex flex-col p-0 bg-gray-50/50">
-            {selectedPrescription ? (
+            {activePrescription ? (
               <div className="flex-1 flex flex-col relative h-full">
                 <div className="flex justify-between items-center p-4 border-b bg-white sticky top-0 z-20">
                   <h2 className="text-lg font-bold text-gray-800">Prescription Preview</h2>
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${selectedPrescription.status === "dispensed" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
-                    {selectedPrescription.status || "pending"}
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${activePrescription.status === "dispensed" ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
+                    {activePrescription.status || "pending"}
                   </span>
                 </div>
                 
@@ -170,19 +202,33 @@ export default function MedicineDispense() {
                             <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs border-b border-gray-200 pb-4 mb-6">
                                 <div className="flex bg-gray-50/50 p-2 rounded">
                                     <span className="text-gray-500 font-medium w-20">Patient Name:</span>
-                                    <span className="font-semibold text-gray-800">{patient?.name || "Unknown"}</span>
+                                    <span className="font-semibold text-gray-800">
+                                      {patient?.name && patient.name !== "Unknown"
+                                        ? patient.name
+                                        : activePrescription.patientName && activePrescription.patientName !== "Unknown Patient"
+                                        ? activePrescription.patientName
+                                        : loadingPatient
+                                        ? "Loading..."
+                                        : "Unknown"}
+                                    </span>
                                 </div>
                                 <div className="flex bg-gray-50/50 p-2 rounded">
                                     <span className="text-gray-500 font-medium w-20">Date:</span>
-                                    <span className="font-semibold text-gray-800">{new Date(selectedPrescription.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
+                                    <span className="font-semibold text-gray-800">{new Date(activePrescription.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</span>
                                 </div>
                                 <div className="flex bg-gray-50/50 p-2 rounded">
                                     <span className="text-gray-500 font-medium w-20">ID No.:</span>
-                                    <span className="font-semibold text-gray-800">{patient?.universityId && patient.universityId !== "N/A" ? patient.universityId : selectedPrescription.patientId.substring(0, 8).toUpperCase()}</span>
+                                    <span className="font-semibold text-gray-800">
+                                      {patient?.universityId && patient.universityId !== "N/A"
+                                        ? patient.universityId
+                                        : <PatientIdLabel patientId={activePrescription.patientId} />}
+                                    </span>
                                 </div>
                                 <div className="flex bg-gray-50/50 p-2 rounded">
                                     <span className="text-gray-500 font-medium w-20">Age:</span>
-                                    <span className="font-semibold text-gray-800">{patient?.age || "N/A"} Years</span>
+                                    <span className="font-semibold text-gray-800">
+                                      {patient?.age && patient.age !== "N/A" ? `${patient.age} Years` : "N/A"}
+                                    </span>
                                 </div>
                             </div>
 
@@ -193,7 +239,7 @@ export default function MedicineDispense() {
                                     <h3 className="text-sm font-semibold text-blue-900">Clinical Diagnosis</h3>
                                 </div>
                                 <div className="p-3 bg-white border border-gray-200 rounded-md text-gray-700 min-h-[40px] text-xs">
-                                    {selectedPrescription.problem || "No diagnosis recorded."}
+                                    {activePrescription.problem || "No diagnosis recorded."}
                                 </div>
                             </div>
 
@@ -203,11 +249,11 @@ export default function MedicineDispense() {
                             </div>
 
                             {/* Medicines */}
-                            <div className={`space-y-3 ${selectedPrescription.medicines.length > 0 ? 'min-h-[100px]' : ''}`}>
-                                {selectedPrescription.medicines.length === 0 && (!selectedPrescription.tests || selectedPrescription.tests.length === 0) && !selectedPrescription.advice ? (
+                            <div className={`space-y-3 ${activePrescription.medicines.length > 0 ? 'min-h-[100px]' : ''}`}>
+                                {activePrescription.medicines.length === 0 && (!activePrescription.tests || activePrescription.tests.length === 0) && !activePrescription.advice ? (
                                     <p className="text-gray-400 italic text-center mt-10 text-xs">No medicines prescribed</p>
                                 ) : (
-                                    selectedPrescription.medicines.map((m, i) => (
+                                    activePrescription.medicines.map((m, i) => (
                                         <div key={i} className="flex justify-between items-start mb-3 group">
                                             <div className="flex gap-2">
                                                 <span className="font-bold text-gray-800 text-sm">{i + 1}.</span>
@@ -226,14 +272,14 @@ export default function MedicineDispense() {
                             </div>
 
                             {/* Diagnostic Tests */}
-                            {selectedPrescription.tests && selectedPrescription.tests.length > 0 && (
+                            {activePrescription.tests && activePrescription.tests.length > 0 && (
                                 <div className="mt-8">
                                     <div className="flex items-center mb-3 border-b border-gray-200 pb-1">
                                         <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} className="w-4 h-4 mr-2 opacity-80" alt="Logo" />
                                         <h3 className="text-sm font-semibold text-blue-900">Recommended Tests</h3>
                                     </div>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 pl-2">
-                                        {selectedPrescription.tests.map((t) => (
+                                        {activePrescription.tests.map((t) => (
                                             <div key={t.id} className="text-xs text-gray-800 flex items-start">
                                                 <span className="text-blue-600 mr-2 font-bold"></span> 
                                                 <span className="leading-snug">{t.name}</span>
@@ -244,14 +290,14 @@ export default function MedicineDispense() {
                             )}
 
                             {/* Additional Advice */}
-                            {selectedPrescription.advice && (
+                            {activePrescription.advice && (
                                 <div className="mt-8">
                                     <div className="flex items-center mb-2 border-b border-gray-200 pb-1">
                                         <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} className="w-4 h-4 mr-2 opacity-80" alt="Logo" />
                                         <h3 className="text-sm font-semibold text-blue-900">Doctor's Advice / Suggestions</h3>
                                     </div>
                                     <div className="text-gray-700 text-xs whitespace-pre-wrap leading-relaxed bg-gray-50 p-4 rounded-md border border-gray-200">
-                                        {selectedPrescription.advice}
+                                        {activePrescription.advice}
                                     </div>
                                 </div>
                             )}
@@ -266,7 +312,9 @@ export default function MedicineDispense() {
 
                                     <div className="text-center w-40">
                                         <div className="border-t border-gray-800 w-full mb-1"></div>
-                                        <p className="font-bold text-gray-800 text-sm">{selectedPrescription.doctorName}</p>
+                                        <p className="font-bold text-gray-800 text-sm">
+                                          {activePrescription.doctorName?.startsWith("Dr.") ? activePrescription.doctorName : `Dr. ${activePrescription.doctorName || "Doctor"}`}
+                                        </p>
                                         <p className="text-[10px] text-gray-600 font-medium capitalize">
                                             Medical Officer
                                         </p>
@@ -285,12 +333,12 @@ export default function MedicineDispense() {
                     </div>
                 </div>
 
-                {(activeTab === "pending" || (selectedPrescription.tests && selectedPrescription.tests.length > 0)) && (
+                {(activeTab === "pending" || (activePrescription.tests && activePrescription.tests.length > 0)) && (
                   <div className="p-4 border-t bg-white sticky bottom-0 z-20 space-y-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                    {selectedPrescription.tests && selectedPrescription.tests.length > 0 && (
+                    {activePrescription.tests && activePrescription.tests.length > 0 && (
                       <Button 
                         className="w-full bg-blue-600 hover:bg-blue-700 py-3 text-lg shadow"
-                        onClick={() => navigate("/receptionist/billing", { state: { patientId: selectedPrescription.patientId, tests: selectedPrescription.tests } })}
+                        onClick={() => navigate("/receptionist/billing", { state: { patientId: activePrescription.patientId, tests: activePrescription.tests } })}
                       >
                         <Receipt size={20} className="inline mr-2" /> Auto-Generate Test Bill
                       </Button>

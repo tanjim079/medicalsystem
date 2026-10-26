@@ -35,9 +35,10 @@ export default function TestManagement() {
     switch (status) {
       case 'Pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'In Progress': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Completed': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      case 'Validated': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
       case 'Awaiting Validation': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'Awaiting Payment': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'Validated': return 'bg-green-100 text-green-800 border-green-200';
       case 'Rejected': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -47,7 +48,7 @@ export default function TestManagement() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900">
-          {isReportsView ? "Laboratory Reports" : "Laboratory Test Requests"}
+          {isReportsView ? "Finalized Laboratory Reports" : "Laboratory Test Orders"}
         </h1>
       </div>
 
@@ -66,6 +67,7 @@ export default function TestManagement() {
         <div className="flex items-center gap-2">
           <Filter className="text-gray-500" size={18} />
           <select 
+            aria-label="Filter tests by status"
             className="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -73,15 +75,14 @@ export default function TestManagement() {
             <option value="All">All Statuses</option>
             {isReportsView ? (
               <>
-                <option value="Awaiting Validation">Awaiting Validation</option>
-                <option value="Awaiting Payment">Awaiting Payment</option>
+                <option value="Completed">Completed</option>
                 <option value="Validated">Validated</option>
-                <option value="Rejected">Rejected</option>
               </>
             ) : (
               <>
                 <option value="Pending">Pending</option>
                 <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
               </>
             )}
           </select>
@@ -94,8 +95,8 @@ export default function TestManagement() {
             <thead>
               <tr className="bg-gray-50 text-gray-600 text-sm">
                 <th className="p-4 border-b font-medium">Date</th>
-                <th className="p-4 border-b font-medium">ID</th>
-                <th className="p-4 border-b font-medium">Patient</th>
+                <th className="p-4 border-b font-medium">Patient ID</th>
+                <th className="p-4 border-b font-medium">Patient Name</th>
                 <th className="p-4 border-b font-medium">Test Name</th>
                 <th className="p-4 border-b font-medium">Status</th>
                 <th className="p-4 border-b font-medium text-right">Action</th>
@@ -117,21 +118,33 @@ export default function TestManagement() {
                     <td className="p-4 text-sm font-medium text-gray-900">{item.patientId}</td>
                     <td className="p-4 text-sm">
                       <div className="font-medium text-gray-900">{item.patientName}</div>
-                      <div className="text-xs text-gray-500"></div>
                     </td>
-                    <td className="p-4 text-sm text-gray-700">{item.testName}</td>
+                    <td className="p-4 text-sm text-gray-700 font-medium">{item.testName}</td>
                     <td className="p-4 text-sm">
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusColor(item.status)}`}>
+                      <span className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getStatusColor(item.status)}`}>
                         {item.status}
                       </span>
                     </td>
                     <td className="p-4 text-sm text-right">
-                      <Link 
-                        to={isReportsView ? `/reports/view/${item.id}` : `/pathologist/tests/${item.id}`}
-                        className="inline-flex items-center justify-center px-4 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium text-xs"
-                      >
-                        {isReportsView ? "View / Validate" : "Process Test"}
-                      </Link>
+                      {isReportsView ? (
+                        <Link 
+                          to={`/reports/view/${item.id}`}
+                          className="inline-flex items-center justify-center px-4 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors font-medium text-xs"
+                        >
+                          View Report
+                        </Link>
+                      ) : item.status === 'Completed' ? (
+                        <span className="text-xs text-emerald-600 font-semibold px-3 py-1 bg-emerald-50 rounded-lg border border-emerald-100">
+                          Completed
+                        </span>
+                      ) : (
+                        <Link 
+                          to={`/pathologist/tests/${item.id}`}
+                          className="inline-flex items-center justify-center px-4 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold text-xs shadow-sm"
+                        >
+                          Process Test
+                        </Link>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -143,4 +156,3 @@ export default function TestManagement() {
     </div>
   );
 }
-

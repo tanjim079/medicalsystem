@@ -15,24 +15,25 @@ export default function PathologistDashboard() {
     fetchLaboratoryData();
   }, [fetchLaboratoryData]);
 
-    const pendingTests = requests.filter(r => r.status === 'Pending');
+  const pendingTests = requests.filter(r => r.status === 'Pending');
   const inProgressTests = requests.filter(r => r.status === 'In Progress');
-  const awaitingValidation = reports.filter(r => r.status === 'Awaiting Validation');
-  const completedToday = reports.filter(r => r.status === 'Validated').filter(r => 
-    r.validatedAt && new Date(r.validatedAt).toDateString() === new Date().toDateString()
-  );
+  const finalizedReports = reports.filter(r => r.status === 'Completed' || r.status === 'Validated');
+  const completedToday = finalizedReports.filter(r => {
+    const reportDate = r.completedAt || r.validatedAt;
+    return reportDate && new Date(reportDate).toDateString() === new Date().toDateString();
+  });
 
   const stats = [
     { title: "Pending Tests", count: pendingTests.length, icon: <Clock size={24} className="text-yellow-500" />, bg: "bg-yellow-50", link: "/pathologist/tests" },
     { title: "In Progress", count: inProgressTests.length, icon: <Activity size={24} className="text-blue-500" />, bg: "bg-blue-50", link: "/pathologist/tests" },
-    { title: "Awaiting Review", count: awaitingValidation.length, icon: <FileText size={24} className="text-purple-500" />, bg: "bg-purple-50", link: "/pathologist/reports" },
-    { title: "Completed Today", count: completedToday.length, icon: <CheckCircle size={24} className="text-green-500" />, bg: "bg-green-50", link: "/pathologist/reports" },
+    { title: "Completed Today", count: completedToday.length, icon: <CheckCircle size={24} className="text-emerald-500" />, bg: "bg-emerald-50", link: "/pathologist/reports" },
+    { title: "Total Finalized Reports", count: finalizedReports.length, icon: <FileText size={24} className="text-indigo-500" />, bg: "bg-indigo-50", link: "/pathologist/reports" },
   ];
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Laboratory Dashboard</h1>
         <p className="text-gray-500">Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'}, {user?.name}</p>
       </div>
 
@@ -55,19 +56,23 @@ export default function PathologistDashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Pending Test Orders */}
         <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Pending Test Requests</h2>
+          <div className="flex justify-between items-center mb-4 border-b pb-2">
+            <h2 className="text-lg font-bold text-gray-900">Pending Test Orders</h2>
+            <Link to="/pathologist/tests" className="text-xs font-semibold text-blue-600 hover:text-blue-700">View All</Link>
+          </div>
           {pendingTests.length === 0 ? (
-            <p className="text-gray-500 text-sm py-4 text-center">No pending tests right now.</p>
+            <p className="text-gray-500 text-sm py-8 text-center italic">No pending test orders right now.</p>
           ) : (
             <div className="space-y-3">
               {pendingTests.slice(0, 5).map(test => (
                 <div key={test.id} className="flex justify-between items-center p-3 hover:bg-gray-50 rounded-lg border border-gray-100">
                   <div>
                     <p className="font-semibold text-sm text-gray-900">{test.testName}</p>
-                    <p className="text-xs text-gray-500">{test.patientName} • {test.patientId}</p>
+                    <p className="text-xs text-gray-500">{test.patientName} • ID: {test.patientId}</p>
                   </div>
-                  <Link to={`/pathologist/tests/${test.id}`} className="text-xs bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full font-medium hover:bg-blue-100 transition-colors">
+                  <Link to={`/pathologist/tests/${test.id}`} className="text-xs bg-blue-600 text-white px-3.5 py-1.5 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-sm">
                     Process Test
                   </Link>
                 </div>
@@ -76,20 +81,24 @@ export default function PathologistDashboard() {
           )}
         </div>
 
+        {/* Recent Finalized Reports */}
         <div className="bg-white border border-gray-100 rounded-xl shadow-sm p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Recent Reports (Awaiting Validation)</h2>
-          {awaitingValidation.length === 0 ? (
-            <p className="text-gray-500 text-sm py-4 text-center">No reports awaiting validation.</p>
+          <div className="flex justify-between items-center mb-4 border-b pb-2">
+            <h2 className="text-lg font-bold text-gray-900">Recent Finalized Reports</h2>
+            <Link to="/pathologist/reports" className="text-xs font-semibold text-blue-600 hover:text-blue-700">View All</Link>
+          </div>
+          {finalizedReports.length === 0 ? (
+            <p className="text-gray-500 text-sm py-8 text-center italic">No finalized reports yet.</p>
           ) : (
             <div className="space-y-3">
-              {awaitingValidation.slice(0, 5).map(report => (
+              {finalizedReports.slice(0, 5).map(report => (
                 <div key={report.id} className="flex justify-between items-center p-3 hover:bg-gray-50 rounded-lg border border-gray-100">
                   <div>
                     <p className="font-semibold text-sm text-gray-900">{report.testName}</p>
-                    <p className="text-xs text-gray-500">{report.patientName} • {new Date(report.requestedAt).toLocaleDateString()}</p>
+                    <p className="text-xs text-gray-500">{report.patientName} • {new Date(report.completedAt || report.requestedAt).toLocaleDateString()}</p>
                   </div>
-                  <Link to={`/reports/view/${report.id}`} className="text-xs bg-purple-50 text-purple-600 px-3 py-1.5 rounded-full font-medium hover:bg-purple-100 transition-colors">
-                    Review
+                  <Link to={`/reports/view/${report.id}`} className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg font-semibold hover:bg-emerald-100 transition-colors">
+                    View Report
                   </Link>
                 </div>
               ))}
@@ -100,6 +109,3 @@ export default function PathologistDashboard() {
     </div>
   );
 }
-
-
-

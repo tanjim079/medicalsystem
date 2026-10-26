@@ -1,20 +1,16 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useLaboratoryStore } from "../../store/useLaboratoryStore";
-import { useAuthStore } from "../../store/useAuthStore";
-import { ArrowLeft, Printer, Download, CheckCircle } from "lucide-react";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { ArrowLeft, Printer, Download, CheckCircle, Loader2 } from "lucide-react";
+import { downloadElementAsPdf } from "../../lib/pdfDownloader";
 
 export default function ReportView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const printRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   
-  const user = useAuthStore((s) => s.user);
   const report = useLaboratoryStore((s) => s.reports.find(r => r.id === id));
-  const validateReport = useLaboratoryStore((s) => s.validateReport);
-
   const fetchLaboratoryData = useLaboratoryStore((s) => s.fetchLaboratoryData);
 
   useEffect(() => {
@@ -25,72 +21,80 @@ export default function ReportView() {
     return <div className="p-8 text-center text-gray-500">Report not found.</div>;
   }
 
-  const isPathologist = user?.role === "pathologist";
-  const canValidate = isPathologist && report.status === "Awaiting Validation";
-
-  const handleValidate = () => {
-    validateReport(report.id);
-    alert("Report validated successfully.");
-  };
-
   const handlePrint = () => {
     window.print();
   };
 
   const handleDownload = async () => {
-    if (!printRef.current) return;
-    const canvas = await html2canvas(printRef.current, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-    
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`LabReport_${report.patientId}_${report.id}.pdf`);
+    if (!printRef.current || isDownloading) return;
+    try {
+      setIsDownloading(true);
+      await downloadElementAsPdf({
+        element: printRef.current,
+        filename: `LabReport_${report.patientId}_${report.id}.pdf`,
+        targetWidth: 800,
+      });
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+      alert("Failed to generate PDF. Please try again or use the Print button.");
+    } finally {
+      setIsDownloading(false);
+    }
   };
+
+  const isFinalized = report.status === "Completed" || report.status === "Validated";
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8 print:p-0 print:bg-white">
       <div className="max-w-4xl mx-auto flex items-center justify-between mb-6 print:hidden relative">
-        <div className="z-10">
+        <div className="z-10 flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="p-2 bg-white border border-gray-200 shadow-sm hover:bg-gray-50 rounded-lg text-gray-600 transition-colors">
             <ArrowLeft size={20} />
           </button>
+          {isFinalized && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <CheckCircle size={14} /> Finalized Report
+            </span>
+          )}
         </div>
         <h1 className="text-2xl font-bold text-gray-900 absolute w-full text-center pointer-events-none">Laboratory Report</h1>
         
         <div className="flex gap-2 z-10">
-          {canValidate && (
-            <button 
-              onClick={handleValidate}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors shadow-sm"
-            >
-              <CheckCircle size={16} /> Validate Report
-            </button>
-          )}
           <button 
+            type="button"
             onClick={handlePrint}
             className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium text-sm transition-colors"
           >
             <Printer size={16} /> Print
           </button>
           <button 
+            type="button"
             onClick={handleDownload}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors shadow-sm"
+            disabled={isDownloading}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg font-medium text-sm transition-colors shadow-sm"
           >
-            <Download size={16} /> PDF
+            {isDownloading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" />
+                <span>Downloading...</span>
+              </>
+            ) : (
+              <>
+                <Download size={16} />
+                <span>PDF</span>
+              </>
+            )}
           </button>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto bg-white rounded-sm shadow-sm print:shadow-none border border-gray-200 print:border-none p-8 md:p-12 relative overflow-hidden" ref={printRef}>
+      <div className="max-w-4xl mx-auto bg-white rounded-sm shadow-sm print:shadow-none border border-gray-200 print:border-none p-6 md:p-12 relative overflow-x-auto md:overflow-hidden" ref={printRef}>
         {/* Watermark */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] z-0">
-            <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="Watermark" className="w-1/2 max-w-[400px] object-contain" />
+          <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="Watermark" className="w-1/2 max-w-[400px] object-contain" />
         </div>
 
-        <div className="relative z-10">
+        <div className="relative z-10 min-w-[320px]">
           {/* Header */}
           <div className="flex flex-col items-center border-b-2 border-blue-800 pb-6 mb-8 text-center">
             <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="RUET Logo" className="w-20 h-20 object-contain mb-3" />
@@ -103,21 +107,21 @@ export default function ReportView() {
           </div>
 
           {/* Patient Info */}
-          <div className="grid grid-cols-2 gap-x-12 gap-y-3 text-sm mb-8">
+          <div className="grid grid-cols-2 gap-x-8 sm:gap-x-12 gap-y-3 text-sm mb-8">
             <div className="flex">
-              <span className="font-semibold text-gray-600 w-32">Patient Name:</span>
+              <span className="font-semibold text-gray-600 w-28 sm:w-32">Patient Name:</span>
               <span className="text-gray-900 font-medium">{report.patientName}</span>
             </div>
             <div className="flex">
-              <span className="font-semibold text-gray-600 w-32">Report Date:</span>
-              <span className="text-gray-900 font-medium">{new Date(report.completedAt || report.requestedAt).toLocaleDateString()}</span>
+              <span className="font-semibold text-gray-600 w-28 sm:w-32">Report Date:</span>
+              <span className="text-gray-900 font-medium">{new Date(report.completedAt || report.validatedAt || report.requestedAt).toLocaleDateString()}</span>
             </div>
             <div className="flex">
-              <span className="font-semibold text-gray-600 w-32">Patient ID:</span>
+              <span className="font-semibold text-gray-600 w-28 sm:w-32">Patient ID:</span>
               <span className="text-gray-900 font-medium">{report.patientId}</span>
             </div>
             <div className="flex">
-              <span className="font-semibold text-gray-600 w-32">Report ID:</span>
+              <span className="font-semibold text-gray-600 w-28 sm:w-32">Report ID:</span>
               <span className="text-gray-900 font-medium">{report.id.substring(0, 8).toUpperCase()}</span>
             </div>
           </div>
@@ -128,7 +132,7 @@ export default function ReportView() {
           </div>
 
           {/* Results Table */}
-          <div className="mb-8">
+          <div className="mb-8 overflow-x-auto">
             <table className="w-full text-left text-sm border-collapse">
               <thead>
                 <tr className="border-b-2 border-gray-300 text-gray-700">
@@ -179,23 +183,22 @@ export default function ReportView() {
           {/* Signatures */}
           <div className="mt-24 grid grid-cols-2 gap-8 text-sm pt-8">
             <div className="text-center">
-              {/* Optional secondary signature area */}
+              {/* Secondary signature area */}
             </div>
             <div className="text-center border-t border-gray-400 pt-2">
               <p className="font-bold text-gray-900">{report.reportedByName}</p>
               <p className="text-gray-600 text-xs">Consultant Pathologist</p>
-              <p className="text-gray-500 text-[10px] mt-1">
-                Status: {report.status === 'Validated' ? 'Electronically Validated' : (report.status === 'Awaiting Payment' ? 'Awaiting Payment Clearance' : 'Awaiting Validation')}
+              <p className="text-emerald-700 font-medium text-[10px] mt-1">
+                Status: Electronically Certified & Finalized
               </p>
             </div>
           </div>
           
           <div className="mt-12 text-center border-t border-gray-200 pt-4">
-            <p className="text-[10px] text-gray-400">This is an electronically generated report. {report.status === 'Validated' ? 'It has been validated and finalized.' : 'It is currently a draft.'}</p>
+            <p className="text-[10px] text-gray-400">This is an electronically generated report. It has been validated and finalized by the consultant pathologist.</p>
           </div>
         </div>
       </div>
     </div>
   );
 }
-

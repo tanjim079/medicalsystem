@@ -1,4 +1,11 @@
-export type LaboratoryRequestStatus = 'Pending' | 'In Progress' | 'Awaiting Validation' | 'Awaiting Payment' | 'Validated' | 'Rejected';
+export type LaboratoryRequestStatus = 
+  | 'Pending' 
+  | 'In Progress' 
+  | 'Completed' 
+  | 'Validated' 
+  | 'Rejected' 
+  | 'Awaiting Validation' 
+  | 'Awaiting Payment';
 
 export type ResultFlag = 'normal' | 'high' | 'low' | 'critical' | 'abnormal';
 
@@ -18,8 +25,8 @@ export interface LaboratoryRequest {
   testId: string;
   testName: string;
   category: string;
-  requestedBy: string; // Doctor ID
-  requestedByName: string; // Doctor Name
+  requestedBy: string; // Doctor / Staff ID
+  requestedByName: string; // Doctor / Staff Name
   requestedAt: string;
   priority: 'Routine' | 'Urgent';
   status: LaboratoryRequestStatus;

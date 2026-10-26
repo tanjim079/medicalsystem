@@ -5,15 +5,22 @@ import MainLayout from "../../layouts/MainLayout";
 import Card from "../../components/ui/Card";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
-import { Search, Printer, Download, Trash2, Plus } from "lucide-react";
+import { Search, Printer, Download, Trash2, Plus, Loader2 } from "lucide-react";
 import type { MedicalTest } from "../../data/tests";
 import { useTestStore } from "../../store/useTestStore";
 import { useBillingStore } from "../../store/useBillingStore";
 import type { Bill } from "../../store/useBillingStore";
 import { useLaboratoryStore } from "../../store/useLaboratoryStore";
 import { useAuthStore } from "../../store/useAuthStore";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import { downloadElementAsPdf } from "../../lib/pdfDownloader";
+
+interface BillingPatient {
+  id: string;
+  universityId: string;
+  name: string;
+  age?: number | string;
+  phone?: string;
+}
 
 export default function TestBilling() {
   const location = useLocation();
@@ -29,22 +36,27 @@ export default function TestBilling() {
   const [patientId, setPatientId] = useState(prefillData?.patientId || "");
   const [patientType, setPatientType] = useState<"Student" | "Employee">("Student");
   
-  // Since `tests` is loaded asynchronously, initialize selected tests in a useEffect
-  const [selectedTests, setSelectedTests] = useState<MedicalTest[]>([]);
+  // User-modified test selection (null when unchanged from initial prefill)
+  const [userSelectedTests, setUserSelectedTests] = useState<MedicalTest[] | null>(null);
 
-  useEffect(() => {
-    if (prefillData?.tests && tests.length > 0 && selectedTests.length === 0) {
-      const prefilled = prefillData.tests.map(t => tests.find(mt => mt.id === t.id)).filter(Boolean) as MedicalTest[];
-      setSelectedTests(prefilled);
-    }
-  }, [prefillData, tests]);
+  const selectedTests: MedicalTest[] = userSelectedTests !== null 
+    ? userSelectedTests 
+    : (prefillData?.tests && tests.length > 0)
+      ? (prefillData.tests.map(t => tests.find(mt => mt.id === t.id)).filter(Boolean) as MedicalTest[])
+      : [];
+
+  const updateSelectedTests = (updater: (prev: MedicalTest[]) => MedicalTest[]) => {
+    setUserSelectedTests(updater(selectedTests));
+  };
+
   const [discount, setDiscount] = useState<number>(0);
   const [tax, setTax] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<"Cash" | "Card" | "Mobile Banking">("Cash");
   const [status, setStatus] = useState<"Paid" | "Due">("Paid");
 
   const [generatedBill, setGeneratedBill] = useState<Bill | null>(null);
-  const [patient, setPatient] = useState<any>(null);
+  const [patient, setPatient] = useState<BillingPatient | null>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const addBill = useBillingStore((s) => s.addBill);
   const addLaboratoryRequest = useLaboratoryStore((s) => s.addRequest);
@@ -63,7 +75,10 @@ export default function TestBilling() {
         if (res.ok) {
           const data = await res.json();
           setPatient({
-            ...data,
+            id: data.id,
+            name: data.name,
+            phone: data.phone,
+            age: data.age,
             universityId: data.roll_number || data.employee_id || patientId,
           });
         } else {
@@ -89,13 +104,13 @@ export default function TestBilling() {
 
     const test = tests.find((t) => t.id === testId);
     if (test && !selectedTests.find((t) => t.id === testId)) {
-      setSelectedTests([...selectedTests, test]);
+      updateSelectedTests((prev) => [...prev, test]);
     }
     e.target.value = ""; // Reset select
   };
 
   const handleRemoveTest = (id: string) => {
-    setSelectedTests(selectedTests.filter((t) => t.id !== id));
+    updateSelectedTests((prev) => prev.filter((t) => t.id !== id));
   };
 
   const handleGenerateBill = async () => {
@@ -151,7 +166,7 @@ export default function TestBilling() {
 
   const resetForm = () => {
     setGeneratedBill(null);
-    setSelectedTests([]);
+    setUserSelectedTests([]);
     setPatientId("");
     setDiscount(0);
     setTax(0);
@@ -162,14 +177,20 @@ export default function TestBilling() {
   };
 
   const handleDownload = async () => {
-    if (!printRef.current || !generatedBill) return;
-
-    const canvas = await html2canvas(printRef.current);
-    const imgData = canvas.toDataURL("image/png");
-
-    const pdf = new jsPDF();
-    pdf.addImage(imgData, "PNG", 10, 10, 190, 0);
-    pdf.save(`${generatedBill.id}.pdf`);
+    if (!printRef.current || !generatedBill || isDownloading) return;
+    try {
+      setIsDownloading(true);
+      await downloadElementAsPdf({
+        element: printRef.current,
+        filename: `${generatedBill.id}.pdf`,
+        targetWidth: 800,
+      });
+    } catch (err) {
+      console.error("Invoice PDF generation failed:", err);
+      alert("Failed to generate PDF. Please try again or use the Print button.");
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   return (
@@ -234,8 +255,8 @@ export default function TestBilling() {
               {patient ? (
                 <div className="bg-green-50 text-green-800 p-3 rounded-lg text-sm">
                   <strong>Name:</strong> {patient.name} <br />
-                  <strong>Age/Gender:</strong> {patient.age} / M <br />
-                  <strong>Contact:</strong> {patient.phone}
+                  <strong>Age:</strong> {patient.age || "N/A"} <br />
+                  <strong>Contact:</strong> {patient.phone || "N/A"}
                 </div>
               ) : (
                 patientId && <p className="text-red-500 text-sm">Patient not found</p>
@@ -368,42 +389,42 @@ export default function TestBilling() {
               <h2 className="text-lg font-bold">Invoice Preview</h2>
               {generatedBill && (
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={handlePrint} className="flex items-center gap-2 text-sm px-3 py-1">
+                  <Button variant="outline" type="button" onClick={handlePrint} className="flex items-center gap-2 text-sm px-3 py-1">
                     <Printer size={16} /> Print
                   </Button>
-                  <Button onClick={handleDownload} className="flex items-center gap-2 text-sm px-3 py-1">
-                    <Download size={16} /> PDF
+                  <Button type="button" onClick={handleDownload} disabled={isDownloading} className="flex items-center gap-2 text-sm px-3 py-1">
+                    {isDownloading ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />} PDF
                   </Button>
                 </div>
               )}
             </div>
 
             {generatedBill ? (
-              <div ref={printRef} className="print-area bg-white p-8 rounded-sm shadow-md text-sm print:shadow-none print:p-0 relative mx-auto max-w-[800px]">
+              <div ref={printRef} className="print-area bg-white p-6 sm:p-8 rounded-sm shadow-md text-sm print:shadow-none print:p-0 relative mx-auto max-w-[800px] overflow-x-auto md:overflow-hidden">
                 {/* Watermark */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04] z-0 print:opacity-[0.04]">
                   <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="Watermark" className="w-2/3 max-w-[500px] object-contain" />
                 </div>
 
                 {/* Content Wrapper */}
-                <div className="relative z-10 flex flex-col h-full min-h-[800px]">
+                <div className="relative z-10 flex flex-col h-full min-h-[800px] min-w-[300px]">
                   {/* Invoice Header */}
                   <div className="flex justify-between items-start border-b-2 border-blue-800 pb-4 mb-6">
-                    <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="RUET Logo" className="w-20 h-20 object-contain" />
-                    <div className="text-center flex-1 mx-4">
-                      <h2 className="text-2xl font-bold text-blue-900 uppercase tracking-wide">RUET Health Complex</h2>
-                      <p className="text-sm text-gray-700 font-medium">Rajshahi University of Engineering & Technology</p>
-                      <p className="text-xs text-gray-500 mt-0.5">Kazla, Rajshahi-6204, Bangladesh</p>
+                    <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="RUET Logo" className="w-16 h-16 sm:w-20 sm:h-20 object-contain" />
+                    <div className="text-center flex-1 mx-2 sm:mx-4">
+                      <h2 className="text-xl sm:text-2xl font-bold text-blue-900 uppercase tracking-wide">RUET Health Complex</h2>
+                      <p className="text-xs sm:text-sm text-gray-700 font-medium">Rajshahi University of Engineering & Technology</p>
+                      <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5">Kazla, Rajshahi-6204, Bangladesh</p>
                     </div>
-                    <div className="text-right w-32">
-                      <h1 className="text-2xl font-bold text-gray-300 uppercase">INVOICE</h1>
+                    <div className="text-right w-28 sm:w-32">
+                      <h1 className="text-xl sm:text-2xl font-bold text-gray-300 uppercase">INVOICE</h1>
                       <p className="font-bold text-gray-800 mt-1">{generatedBill.id.substring(0, 8).toUpperCase()}</p>
                       <p className="text-xs text-gray-500">{new Date(generatedBill.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                     </div>
                   </div>
 
                   {/* Patient Info */}
-                  <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm border-b border-gray-200 pb-4 mb-6">
+                  <div className="grid grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-2 text-sm border-b border-gray-200 pb-4 mb-6">
                     <div className="flex bg-gray-50/50 p-2 rounded">
                       <span className="text-gray-500 font-medium w-24">Billed To:</span>
                       <span className="font-semibold text-gray-800">{generatedBill.patientName}</span>

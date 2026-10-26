@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { Activity, Beaker, Heart, Waves } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Activity, Beaker, Heart, Waves, HeartHandshake, ArrowRight } from "lucide-react";
 import type { MedicalTest } from "../../data/tests";
 import { useTestStore } from "../../store/useTestStore";
 
@@ -76,6 +77,30 @@ export default function PublicTestsPage() {
           We offer a variety of diagnostic tests on campus at subsidized rates for the
           convenience of our students and staff.
         </p>
+      </div>
+
+      {/* 🔷 External Diagnostic MoU Notice Banner */}
+      <div className="mb-10 bg-gradient-to-r from-emerald-50 via-teal-50 to-blue-50 border border-teal-200/80 rounded-2xl p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+        <div className="flex items-start gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <HeartHandshake size={22} />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900 text-sm md:text-base">
+              Need Advanced Imaging, MRI, CT Scan or Specialized Tests?
+            </h3>
+            <p className="text-xs md:text-sm text-slate-600 mt-0.5">
+              RUET community members enjoy <strong>20% to 40% discount</strong> at Popular Diagnostic Centre & Islami Bank Hospital under bilateral MoUs.
+            </p>
+          </div>
+        </div>
+        <Link
+          to="/mou"
+          className="inline-flex items-center gap-1.5 bg-teal-700 hover:bg-teal-800 text-white px-4 py-2 rounded-xl text-xs font-semibold shrink-0 transition-colors shadow-xs"
+        >
+          <span>View MoU Discounts</span>
+          <ArrowRight size={14} />
+        </Link>
       </div>
 
       {/* Tables grouped by category */}

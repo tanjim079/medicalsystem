@@ -6,13 +6,12 @@ import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
 import Card from "../components/ui/Card";
 import { useMedicineStore } from "../store/useMedicineStore";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
 import { useAuthStore } from "../store/useAuthStore";
 import { usePrescriptionStore } from "../store/usePrescriptionStore";
-import { Edit2, X, Search } from "lucide-react";
+import { Edit2, X, Search, Loader2 } from "lucide-react";
 import type { MedicalTest } from "../data/tests";
 import { useTestStore } from "../store/useTestStore";
+import { downloadElementAsPdf } from "../lib/pdfDownloader";
 
 interface PrescriptionItem {
     medicineId: string;
@@ -21,10 +20,18 @@ interface PrescriptionItem {
     days: string;
 }
 
+interface PrescriptionPatient {
+    id: string;
+    universityId: string;
+    name: string;
+    age?: number | string;
+}
+
 export default function PrescriptionPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const printRef = useRef<HTMLDivElement>(null);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     const [problem, setProblem] = useState("");
 
@@ -34,7 +41,7 @@ export default function PrescriptionPage() {
     const { tests: medicalTests, fetchTests } = useTestStore();
     const { medicines, fetchMedicines } = useMedicineStore();
 
-    const [patient, setPatient] = useState<any | null>(null);
+    const [patient, setPatient] = useState<PrescriptionPatient | null>(null);
 
     useEffect(() => {
         fetchTests();
@@ -139,8 +146,6 @@ export default function PrescriptionPage() {
             advice: advice,
         });
 
-        
-
         setIsSubmitted(true);
         alert("Prescription submitted successfully!");
     };
@@ -152,20 +157,27 @@ export default function PrescriptionPage() {
 
     // 📄 PDF Download
     const handleDownload = async () => {
-        if (!printRef.current) return;
-
-        const canvas = await html2canvas(printRef.current);
-        const imgData = canvas.toDataURL("image/png");
-
-        const pdf = new jsPDF();
-        pdf.addImage(imgData, "PNG", 10, 10, 190, 0);
-        pdf.save("prescription.pdf");
+        if (!printRef.current || isDownloading) return;
+        try {
+            setIsDownloading(true);
+            await downloadElementAsPdf({
+                element: printRef.current,
+                filename: `prescription-${id || "new"}.pdf`,
+                targetWidth: 800,
+            });
+        } catch (err) {
+            console.error("Prescription PDF generation failed:", err);
+            alert("Failed to generate PDF. Please try again or use the Print button.");
+        } finally {
+            setIsDownloading(false);
+        }
     };
 
     return (
         <MainLayout>
             {/* Back */}
             <button
+                type="button"
                 onClick={() => navigate(-1)}
                 className="mb-4 bg-gray-200 px-3 py-1 rounded print:hidden"
             >
@@ -173,25 +185,40 @@ export default function PrescriptionPage() {
             </button>
 
             <h1 className="text-2xl font-bold mb-4 print:hidden">
-                Prescription for {patient?.universityId || id}
+                {isSubmitted ? "Prescription Preview" : "Create Prescription"}
             </h1>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:block">
+            <div className={`grid gap-6 ${isSubmitted ? "grid-cols-1 max-w-4xl mx-auto" : "grid-cols-1 lg:grid-cols-2"}`}>
 
-                {/* LEFT: FORM */}
-                <div className="print:hidden">
+                {/* LEFT: FORM (hidden when submitted) */}
+                <div className={`space-y-4 print:hidden ${isSubmitted ? "hidden" : ""}`}>
                     <Card>
+                        <h2 className="text-lg font-bold mb-4">
+                            Prescription Details
+                        </h2>
+
                         <div className="space-y-4">
-                            {isSubmitted ? (
-                                <div className="bg-green-50 text-green-700 p-4 rounded-lg border border-green-200">
-                                    <h3 className="font-semibold text-lg mb-1">Prescription Submitted</h3>
-                                    <p className="text-sm">This prescription has been finalized and submitted to the patient's record. Editing is no longer possible.</p>
+                            {/* Patient Info */}
+                            {patient && (
+                                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900 flex justify-between">
+                                    <div>
+                                        <p className="font-semibold">{patient.name}</p>
+                                        <p className="text-xs text-blue-700">ID: {patient.universityId || id}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="font-semibold">{patient.age} yrs</p>
+                                    </div>
                                 </div>
-                            ) : (
+                            )}
+
+                            {!isSubmitted && (
                                 <>
                                     {/* Problem */}
                                     <div>
-                                        <label className="block text-sm mb-1">
+                                        <label
+                                            htmlFor="problem"
+                                            className="block text-sm mb-1"
+                                        >
                                             Problem / Diagnosis
                                         </label>
                                         <textarea
@@ -355,7 +382,7 @@ export default function PrescriptionPage() {
                 <Card className="print:shadow-none print:border-none print:p-0">
                     <div
                         ref={printRef}
-                        className="print-area bg-white p-8 rounded-sm shadow-md text-sm print:shadow-none print:p-0 relative"
+                        className="print-area bg-white p-6 sm:p-8 rounded-sm shadow-md text-sm print:shadow-none print:p-0 relative overflow-x-auto md:overflow-hidden"
                     >
                         {/* Watermark */}
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04] z-0 print:opacity-[0.04]">
@@ -363,20 +390,20 @@ export default function PrescriptionPage() {
                         </div>
 
                         {/* Content Wrapper */}
-                        <div className="relative z-10 flex flex-col h-full min-h-[800px]">
+                        <div className="relative z-10 flex flex-col h-full min-h-[800px] min-w-[300px]">
                             {/* Header */}
                             <div className="grid grid-cols-[auto_1fr_auto] items-center border-b-2 border-blue-800 pb-4 mb-6">
-                                <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="RUET Logo" className="w-20 h-20 object-contain" />
-                                <div className="text-center">
-                                    <h2 className="text-2xl font-bold text-blue-900 uppercase tracking-wide">RUET Health Complex</h2>
-                                    <p className="text-sm text-gray-700 font-medium">Rajshahi University of Engineering & Technology</p>
-                                    <p className="text-xs text-gray-500 mt-0.5">Kazla, Rajshahi-6204, Bangladesh</p>
+                                <img src={`${import.meta.env.BASE_URL}ruet-logo.png`} alt="RUET Logo" className="w-16 h-16 sm:w-20 sm:h-20 object-contain" />
+                                <div className="text-center px-2">
+                                    <h2 className="text-xl sm:text-2xl font-bold text-blue-900 uppercase tracking-wide">RUET Health Complex</h2>
+                                    <p className="text-xs sm:text-sm text-gray-700 font-medium">Rajshahi University of Engineering & Technology</p>
+                                    <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5">Kazla, Rajshahi-6204, Bangladesh</p>
                                 </div>
-                                <div className="w-20"></div> {/* Spacer to maintain perfect center alignment */}
+                                <div className="w-16 sm:w-20"></div> {/* Spacer to maintain perfect center alignment */}
                             </div>
 
                             {/* Patient Info */}
-                            <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm border-b border-gray-200 pb-4 mb-6">
+                            <div className="grid grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-2 text-sm border-b border-gray-200 pb-4 mb-6">
                                 <div className="flex bg-gray-50/50 p-2 rounded">
                                     <span className="text-gray-500 font-medium w-24">Patient Name:</span>
                                     <span className="font-semibold text-gray-800">{patient?.name || "Unknown"}</span>
@@ -431,6 +458,7 @@ export default function PrescriptionPage() {
                                             </div>
                                             {!isSubmitted && (
                                                 <button
+                                                    type="button"
                                                     onClick={() => handleEditMedicine(i)}
                                                     className="text-gray-400 hover:text-blue-600 transition-colors p-1 print:hidden mt-1"
                                                     title="Edit Medicine"
@@ -477,14 +505,14 @@ export default function PrescriptionPage() {
                             <div className="mt-auto pt-24 flex-grow flex flex-col justify-end">
                                 {/* Signatures */}
                                 <div className="flex justify-between items-end pb-6">
-                                    <div className="text-center w-48">
+                                    <div className="text-center w-40 sm:w-48">
                                         <div className="border-t border-gray-800 w-full mb-2"></div>
-                                        <p className="text-sm text-gray-800 font-semibold">Patient Signature</p>
+                                        <p className="text-xs sm:text-sm text-gray-800 font-semibold">Patient Signature</p>
                                     </div>
 
-                                    <div className="text-center w-48">
+                                    <div className="text-center w-40 sm:w-48">
                                         <div className="border-t border-gray-800 w-full mb-2"></div>
-                                        <p className="font-bold text-gray-800 text-base">{user?.name || "Doctor"}</p>
+                                        <p className="font-bold text-gray-800 text-sm sm:text-base">{user?.name || "Doctor"}</p>
                                         <p className="text-xs text-gray-600 font-medium capitalize">
                                             {user?.role || "Medical Officer"}
                                         </p>
@@ -504,16 +532,29 @@ export default function PrescriptionPage() {
 
                     {/* Actions */}
                     <div className="flex gap-2 mt-4 flex-wrap items-center print:hidden">
-                        <Button onClick={handlePrint}>
+                        <Button type="button" onClick={handlePrint}>
                             Print
                         </Button>
 
-                        <Button onClick={handleDownload}>
-                            Download PDF
+                        <Button 
+                            type="button" 
+                            onClick={handleDownload} 
+                            disabled={isDownloading}
+                            className="flex items-center gap-2"
+                        >
+                            {isDownloading ? (
+                                <>
+                                    <Loader2 size={16} className="animate-spin" />
+                                    <span>Downloading...</span>
+                                </>
+                            ) : (
+                                <span>Download PDF</span>
+                            )}
                         </Button>
 
                         {!isSubmitted && (
                             <Button
+                                type="button"
                                 onClick={handleSubmit}
                                 className="ml-auto !bg-green-600 hover:!bg-green-700 text-white"
                             >

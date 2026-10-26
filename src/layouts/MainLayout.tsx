@@ -66,6 +66,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
               <Link to="/doctors" className="hover:text-white transition-colors">Doctors List</Link>
               <Link to="/staff" className="hover:text-white transition-colors">Medical Staffs</Link>
               <Link to="/tests" className="hover:text-white transition-colors">Available Tests</Link>
+              <Link to="/mou" className="hover:text-white transition-colors">MoU Partners</Link>
               <Link to="/login" className="hover:text-white transition-colors">Staffs/Student Login</Link>
               <a href="https://www.ruet.ac.bd" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">RUET Main Website</a>
             </div>

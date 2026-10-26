@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Activity, Clock, ShieldPlus, Users, PhoneCall } from "lucide-react";
+import { ArrowRight, Activity, Clock, ShieldPlus, Users, PhoneCall, HeartHandshake } from "lucide-react";
 import { siteSettings } from "../../config/siteSettings";
 
 export default function HomePage() {
@@ -122,6 +122,85 @@ export default function HomePage() {
             <Link to="/services" className="inline-flex items-center gap-2 bg-gray-900 text-white px-8 py-3 rounded-full font-semibold hover:bg-gray-800 transition-all shadow-md hover:shadow-lg">
               View All Services Details <ArrowRight size={18} />
             </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* 🔷 Healthcare Partnerships (MoU) Showcase Section */}
+      <section className="py-16 px-6 bg-gradient-to-b from-white to-blue-50/50 border-t border-gray-100">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-3xl p-8 md:p-12 shadow-xl relative overflow-hidden">
+            {/* Background glowing shape */}
+            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-blue-500/20 blur-3xl pointer-events-none"></div>
+
+            <div className="relative z-10 grid lg:grid-cols-12 gap-8 items-center">
+              <div className="lg:col-span-7 space-y-4">
+                <div className="inline-flex items-center gap-2 bg-teal-500/20 border border-teal-400/30 text-teal-300 text-xs font-semibold px-3.5 py-1.5 rounded-full">
+                  <HeartHandshake size={15} />
+                  <span>Official MoU Signing • 24 June 2024</span>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+                  Healthcare Partnerships & <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-blue-200">
+                    Diagnostic Concessions (MoU)
+                  </span>
+                </h2>
+                <p className="text-slate-300 text-sm md:text-base leading-relaxed">
+                  RUET has signed official Memoranda of Understanding with premier healthcare institutions in Rajshahi. Students, faculty, and staff are eligible for exclusive discounts of up to <strong className="text-white">40%</strong> on routine and advanced diagnostic investigations.
+                </p>
+
+                <div className="pt-2 flex flex-wrap gap-4">
+                  <Link
+                    to="/mou"
+                    className="inline-flex items-center gap-2 bg-teal-400 hover:bg-teal-300 text-slate-950 font-bold px-6 py-3 rounded-full text-sm shadow-md transition-all hover:shadow-lg"
+                  >
+                    <span>View Partner Discounts</span>
+                    <ArrowRight size={16} />
+                  </Link>
+                </div>
+              </div>
+
+              {/* Partner Quick Glance Cards */}
+              <div className="lg:col-span-5 grid sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                {/* Popular Diagnostic Card */}
+                <div className="bg-white/10 backdrop-blur-md border border-white/15 p-5 rounded-2xl hover:bg-white/15 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-base text-white">Popular Diagnostic Centre</span>
+                    <span className="text-xs font-extrabold bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 px-2.5 py-1 rounded-full">
+                      Up to 40% OFF
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 mb-3">
+                    40% on Pathology, 25% on Imaging (CT, MRI, USG, X-Ray), 20% on Specialized tests.
+                  </p>
+                  <Link
+                    to="/mou"
+                    className="text-xs text-teal-300 hover:text-white font-semibold inline-flex items-center gap-1"
+                  >
+                    Details & Terms <ArrowRight size={13} />
+                  </Link>
+                </div>
+
+                {/* Islami Bank Hospital Card */}
+                <div className="bg-white/10 backdrop-blur-md border border-white/15 p-5 rounded-2xl hover:bg-white/15 transition-all">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-bold text-base text-white">Islami Bank Hospital</span>
+                    <span className="text-xs font-extrabold bg-teal-500/30 text-teal-300 border border-teal-400/40 px-2.5 py-1 rounded-full">
+                      Up to 35% OFF
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 mb-3">
+                    35% on all Pathological Tests, 30% on all Imaging & Radiological Tests.
+                  </p>
+                  <Link
+                    to="/mou"
+                    className="text-xs text-teal-300 hover:text-white font-semibold inline-flex items-center gap-1"
+                  >
+                    Details & Terms <ArrowRight size={13} />
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

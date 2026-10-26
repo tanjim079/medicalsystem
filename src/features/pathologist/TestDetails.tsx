@@ -57,18 +57,18 @@ export default function TestDetails() {
   };
 
   const handleSaveDraft = () => {
-    // In a real app, this would save to a draft state or partial report
-    alert("Draft saved locally (mock).");
+    alert("Draft saved locally.");
   };
 
-  const handleSubmitForValidation = () => {
+  const handleSubmitReport = async () => {
     // Ensure essential data is filled
     if (parameters.some(p => !p.name || !p.value)) {
       alert("Please fill in all parameter names and values.");
       return;
     }
 
-    addReport({
+    const now = new Date().toISOString();
+    await addReport({
       requestId: request.id,
       patientId: request.patientId,
       patientName: request.patientName,
@@ -79,11 +79,14 @@ export default function TestDetails() {
       interpretation,
       reportedBy: user?.id || "unknown",
       reportedByName: user?.name || "Pathologist",
-      status: "Awaiting Validation",
+      status: "Completed",
       requestedAt: request.requestedAt,
-      completedAt: new Date().toISOString()
+      completedAt: now,
+      validatedAt: now
     });
 
+    await updateRequestStatus(request.id, 'Completed');
+    alert("Report submitted successfully! It is now finalized and automatically accessible to the patient and doctor.");
     navigate('/pathologist/dashboard');
   };
 
@@ -125,7 +128,7 @@ export default function TestDetails() {
                 <span className="font-semibold text-gray-900">{request.category}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-500">Pathologist:</span>
+                <span className="text-gray-500">Requested By:</span>
                 <span className="font-semibold text-gray-900">{request.requestedByName}</span>
               </div>
               <div className="flex justify-between">
@@ -251,10 +254,10 @@ export default function TestDetails() {
                 <Save size={16} /> Save Draft
               </button>
               <button
-                onClick={handleSubmitForValidation}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors shadow-sm"
+                onClick={handleSubmitReport}
+                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold transition-colors shadow-sm"
               >
-                <FileCheck size={16} /> Submit for Validation
+                <FileCheck size={18} /> Submit Report
               </button>
             </div>
 

@@ -15,6 +15,7 @@ interface LaboratoryState {
   
   addReport: (report: Omit<LaboratoryReport, 'id'>) => Promise<LaboratoryReport | null>;
   updateReport: (id: string, updates: Partial<LaboratoryReport>) => Promise<void>;
+  // Deprecated approval/validation methods retained for backward compatibility
   validateReport: (id: string) => Promise<void>;
   approveReport: (id: string) => Promise<void>;
 
@@ -91,9 +92,13 @@ export const useLaboratoryStore = create<LaboratoryState>()((set, get) => ({
   },
 
   addReport: async (reportData) => {
+    const nowIso = new Date().toISOString();
     const payload = {
       ...reportData,
-      id: `REP-${Math.floor(Math.random() * 10000)}`
+      id: `REP-${Math.floor(Math.random() * 10000)}`,
+      status: 'Completed',
+      completedAt: reportData.completedAt || nowIso,
+      validatedAt: reportData.validatedAt || nowIso
     };
     try {
       const res = await fetchAuth(`${API_URL}/laboratory/reports`, {
@@ -103,7 +108,13 @@ export const useLaboratoryStore = create<LaboratoryState>()((set, get) => ({
       });
       if (res.ok) {
         const newReport = await res.json();
-        set((state) => ({ reports: [...state.reports, newReport] }));
+        set((state) => ({
+          reports: [...state.reports, newReport],
+          // Also automatically mark matching request status to 'Completed' in local state
+          requests: state.requests.map((r) =>
+            r.id === payload.requestId ? { ...r, status: 'Completed' } : r
+          ),
+        }));
         return newReport;
       }
       return null;
@@ -131,12 +142,13 @@ export const useLaboratoryStore = create<LaboratoryState>()((set, get) => ({
     }
   },
 
+  // Deprecated stubs - reports are automatically finalized upon submission
   validateReport: async (id) => {
     try {
       const res = await fetchAuth(`${API_URL}/laboratory/reports/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'Awaiting Payment' })
+        body: JSON.stringify({ status: 'Completed', validatedAt: new Date().toISOString() })
       });
       if (res.ok) {
         const updated = await res.json();
@@ -154,7 +166,7 @@ export const useLaboratoryStore = create<LaboratoryState>()((set, get) => ({
       const res = await fetchAuth(`${API_URL}/laboratory/reports/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'Validated', validatedAt: new Date().toISOString() })
+        body: JSON.stringify({ status: 'Completed', validatedAt: new Date().toISOString() })
       });
       if (res.ok) {
         const updated = await res.json();
@@ -176,8 +188,9 @@ export const useLaboratoryStore = create<LaboratoryState>()((set, get) => ({
   },
 
   getReportsByPatient: (patientId) => {
-    return get().reports.filter(r => r.patientId.toLowerCase() === patientId.toLowerCase());
+    return get().reports.filter(r => 
+      r.patientId.toLowerCase() === patientId.toLowerCase() &&
+      (r.status === 'Completed' || r.status === 'Validated')
+    );
   }
 }));
-
-

@@ -26,16 +26,17 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
     { name: "Doctors", path: "/doctors" },
     { name: "Staffs", path: "/staff" },
     { name: "Tests", path: "/tests" },
+    { name: "MoU Partners", path: "/mou" },
   ];
 
   if (user?.role === "receptionist") {
     navLinks = [
       { name: "Billing", path: "/receptionist/billing" },
       { name: "Billing History", path: "/receptionist/billing-history" },
-      { name: "Reports Clearance", path: "/receptionist/reports" },
       { name: "Pharmacy", path: "/receptionist/pharmacy" },
       { name: "Doctors", path: "/doctors" },
       { name: "Tests", path: "/tests" },
+      { name: "MoU Partners", path: "/mou" },
     ];
   } else if (user?.role === "doctor") {
     navLinks = [
@@ -43,6 +44,7 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
       { name: "Doctors", path: "/doctors" },
       { name: "Staffs", path: "/staff" },
       { name: "Tests", path: "/tests" },
+      { name: "MoU Partners", path: "/mou" },
     ];
   } else if (user?.role === "admin") {
     navLinks = [
@@ -50,6 +52,7 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
       { name: "Doctors", path: "/doctors" },
       { name: "Staffs", path: "/staff" },
       { name: "Tests", path: "/tests" },
+      { name: "MoU Partners", path: "/mou" },
     ];
   } else if (["student", "patient", "teacher", "officer"].includes(user?.role || "")) {
     navLinks = [
@@ -57,6 +60,7 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
       { name: "Doctors", path: "/doctors" },
       { name: "Staffs", path: "/staff" },
       { name: "Tests", path: "/tests" },
+      { name: "MoU Partners", path: "/mou" },
     ];
   } else if (user?.role === "pathologist") {
     navLinks = [
@@ -196,5 +200,3 @@ export default function Navbar({ printHidden = false }: NavbarProps) {
     </>
   );
 }
-
-

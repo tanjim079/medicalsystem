@@ -7,6 +7,7 @@ import PublicServicesPage from "./features/services/PublicServicesPage";
 import PublicDoctorsPage from "./features/doctor/PublicDoctorsPage";
 import PublicStaffPage from "./features/staff/PublicStaffPage";
 import PublicTestsPage from "./features/tests/PublicTestsPage";
+import PublicMouPage from "./features/mou/PublicMouPage";
 import StudentDashboard from "./features/student/StudentDashboard";
 import TeacherDashboard from "./features/teacher/TeacherDashboard";
 import DoctorDashboard from "./features/doctor/DoctorDashboard";
@@ -14,7 +15,6 @@ import DoctorDashboard from "./features/doctor/DoctorDashboard";
 import TestBilling from "./features/receptionist/TestBilling";
 import BillingHistory from "./features/receptionist/BillingHistory";
 import MedicineDispense from "./features/receptionist/MedicineDispense";
-import ReportClearance from "./features/receptionist/ReportClearance";
 import PrescriptionPage from "./pages/PrescriptionPage";
 import ViewPrescriptionPage from "./pages/ViewPrescriptionPage";
 import CreateCertificatePage from "./pages/CreateCertificatePage";
@@ -34,6 +34,7 @@ import TestManagement from "./features/pathologist/TestManagement";
 import TestDetails from "./features/pathologist/TestDetails";
 import ReportView from "./features/pathologist/ReportView";
 import PathologistProfile from "./features/pathologist/PathologistProfile";
+
 function App() {
   return (
     <BrowserRouter>
@@ -45,18 +46,21 @@ function App() {
         <Route path="/doctors" element={<PublicLayout><PublicDoctorsPage /></PublicLayout>} />
         <Route path="/staff" element={<PublicLayout><PublicStaffPage /></PublicLayout>} />
         <Route path="/tests" element={<PublicLayout><PublicTestsPage /></PublicLayout>} />
+        <Route path="/mou" element={<PublicLayout><PublicMouPage /></PublicLayout>} />
+        <Route path="/mou-partners" element={<Navigate to="/mou" replace />} />
         <Route path="/login" element={<PublicLayout><LoginPage /></PublicLayout>} />
 
         {/* Protected Dashboard Routes (No public layout for these) */}
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/teacher" element={<TeacherDashboard />} />
         <Route path="/receptionist" element={<Navigate to="/receptionist/billing" replace />} />
-
+        <Route path="/receptionist/patients" element={<Navigate to="/receptionist/billing" replace />} />
 
         <Route path="/receptionist/billing" element={<TestBilling />} />
         <Route path="/receptionist/billing-history" element={<BillingHistory />} />
         <Route path="/receptionist/pharmacy" element={<MedicineDispense />} />
-        <Route path="/receptionist/reports" element={<ReportClearance />} />
+        {/* Legacy clearance route redirects automatically to billing */}
+        <Route path="/receptionist/reports" element={<Navigate to="/receptionist/billing" replace />} />
         <Route path="/prescription/:id" element={<PrescriptionPage />} />
         <Route path="/prescription/view/:prescriptionId" element={<ViewPrescriptionPage />} />
         <Route path="/certificate/create/:patientId" element={<CreateCertificatePage />} />
@@ -85,11 +89,8 @@ function App() {
           <Route path="profile" element={<PathologistProfile />} />
         </Route>
       </Routes>
-
-
     </BrowserRouter>
   );
 }
 
 export default App;
-
