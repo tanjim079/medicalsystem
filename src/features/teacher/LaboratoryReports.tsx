@@ -61,58 +61,68 @@ export default function LaboratoryReports() {
     isUserMatch(r.patientId) && (r.status === 'Completed' || r.status === 'Validated')
   );
 
-  // Combine requests and finalized reports into unified rows
+  // Combine requests and finalized reports into deduplicated unified rows
   const unifiedRows: TestRowItem[] = [];
-  const matchedReportIds = new Set<string>();
+  const fulfilledRequestIds = new Set<string>();
+  const fulfilledReportIds = new Set<string>();
 
-  // Process requests first
-  patientRequests.forEach((req) => {
-    // Check if there is an associated finalized report
-    const matchingReport = patientReports.find(
-      rep => rep.requestId === req.id || 
-             (rep.testName.toLowerCase() === req.testName.toLowerCase() && 
-              Math.abs(new Date(rep.requestedAt || rep.completedAt || 0).getTime() - new Date(req.requestedAt).getTime()) < 86400000 * 2)
-    );
+  // 1. Process all finalized reports first (each completed report appears exactly ONCE)
+  patientReports.forEach((rep) => {
+    if (fulfilledReportIds.has(rep.id)) return;
+    fulfilledReportIds.add(rep.id);
 
-    if (matchingReport) {
-      matchedReportIds.add(matchingReport.id);
-      unifiedRows.push({
-        id: req.id,
-        testName: req.testName,
-        category: req.category,
-        date: matchingReport.completedAt || matchingReport.validatedAt || req.requestedAt,
-        status: 'Completed',
-        reportId: matchingReport.id,
-        reportedByName: matchingReport.reportedByName
-      });
-    } else {
-      const normalizedStatus: 'Pending' | 'In Progress' | 'Completed' = 
-        req.status === 'In Progress' ? 'In Progress' :
-        req.status === 'Completed' ? 'Completed' : 'Pending';
-
-      unifiedRows.push({
-        id: req.id,
-        testName: req.testName,
-        category: req.category,
-        date: req.requestedAt,
-        status: normalizedStatus,
-      });
+    if (rep.requestId) {
+      fulfilledRequestIds.add(rep.requestId);
     }
+
+    unifiedRows.push({
+      id: rep.id,
+      testName: rep.testName,
+      category: rep.category || 'Pathology',
+      date: rep.completedAt || rep.validatedAt || rep.requestedAt || (rep as any).date || new Date().toISOString(),
+      status: 'Completed',
+      reportId: rep.id,
+      reportedByName: rep.reportedByName
+    });
   });
 
-  // Include any finalized reports not directly linked to a request order
-  patientReports.forEach((rep) => {
-    if (!matchedReportIds.has(rep.id)) {
-      unifiedRows.push({
-        id: rep.id,
-        testName: rep.testName,
-        category: rep.category,
-        date: rep.completedAt || rep.validatedAt || rep.requestedAt,
-        status: 'Completed',
-        reportId: rep.id,
-        reportedByName: rep.reportedByName
-      });
-    }
+  // 2. Process pending / in-progress requests that don't already have a finalized report
+  const seenPendingKeys = new Set<string>();
+
+  patientRequests.forEach((req) => {
+    // Skip if already fulfilled by report requestId
+    if (fulfilledRequestIds.has(req.id)) return;
+
+    // Check if this test was already fulfilled by an existing finalized report within 2 days
+    const isAlreadyFulfilled = patientReports.some(rep => {
+      if (rep.requestId === req.id) return true;
+      if (rep.testName.toLowerCase() === req.testName.toLowerCase()) {
+        const repTime = new Date(rep.requestedAt || rep.completedAt || (rep as any).date || 0).getTime();
+        const reqTime = new Date(req.requestedAt).getTime();
+        return Math.abs(repTime - reqTime) < 86400000 * 2;
+      }
+      return false;
+    });
+
+    if (isAlreadyFulfilled) return;
+
+    // Deduplicate multiple identical pending requests on the same day
+    const reqDateStr = req.requestedAt ? new Date(req.requestedAt).toISOString().split('T')[0] : '';
+    const pendingKey = `${req.testName.toLowerCase()}_${reqDateStr}`;
+    if (seenPendingKeys.has(pendingKey)) return;
+    seenPendingKeys.add(pendingKey);
+
+    const normalizedStatus: 'Pending' | 'In Progress' | 'Completed' = 
+      req.status === 'In Progress' ? 'In Progress' :
+      req.status === 'Completed' ? 'Completed' : 'Pending';
+
+    unifiedRows.push({
+      id: req.id,
+      testName: req.testName,
+      category: req.category || 'Pathology',
+      date: req.requestedAt,
+      status: normalizedStatus,
+    });
   });
 
   // Sort descending by date

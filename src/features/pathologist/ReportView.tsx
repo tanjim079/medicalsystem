@@ -10,12 +10,24 @@ export default function ReportView() {
   const printRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
   
-  const report = useLaboratoryStore((s) => s.reports.find(r => r.id === id));
+  const report = useLaboratoryStore((s) => s.reports.find(r => r.id === id || (r as any).requestId === id || (r as any).reportId === id));
+  const loading = useLaboratoryStore((s) => s.loading);
   const fetchLaboratoryData = useLaboratoryStore((s) => s.fetchLaboratoryData);
 
   useEffect(() => {
     fetchLaboratoryData();
   }, [fetchLaboratoryData]);
+
+  if (loading && !report) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <p className="text-sm font-medium text-gray-600">Loading laboratory report...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!report) {
     return <div className="p-8 text-center text-gray-500">Report not found.</div>;
@@ -143,7 +155,7 @@ export default function ReportView() {
                 </tr>
               </thead>
               <tbody>
-                {report.parameters.map((p) => (
+                {(report.parameters || []).map((p) => (
                   <tr key={p.id} className="border-b border-gray-100 last:border-0">
                     <td className="py-3 px-2 text-gray-800 font-medium">{p.name}</td>
                     <td className="py-3 px-2">
