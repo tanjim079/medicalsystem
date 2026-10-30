@@ -1,5 +1,6 @@
 import { fetchAuth } from '../../lib/fetchAuth';
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import MainLayout from "../../layouts/MainLayout";
 import TeacherProfile from "./TeacherProfile";
 import MedicalHistory from "./MedicalHistory";
@@ -22,11 +23,17 @@ interface PatientDashboardData extends Patient {
 }
 
 export default function TeacherDashboard() {
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const [patientData, setPatientData] = useState<PatientDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!user) {
+      navigate('/login', { replace: true });
+      return;
+    }
+
     const fetchPatientData = async (id: string) => {
       try {
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
@@ -39,7 +46,7 @@ export default function TeacherDashboard() {
         setPatientData({
           id: data.id,
           universityId: data.employee_id || data.roll_number || data.email || "N/A",
-            department: data.department || "N/A",
+          department: data.department || "N/A",
           name: data.name,
           phone: data.phone || "N/A",
           age: data.age || "N/A",
@@ -57,10 +64,10 @@ export default function TeacherDashboard() {
       }
     };
 
-    if (user?.id) {
-      fetchPatientData(user.id);
-    }
-  }, [user]);
+    fetchPatientData(user.id);
+  }, [user, navigate]);
+
+  if (!user) return null;
 
   return (
     <MainLayout>
@@ -129,7 +136,7 @@ export default function TeacherDashboard() {
         <div className="md:col-span-2 space-y-6">
           <AppointmentsList />
           <MedicalHistory />
-          <LaboratoryReports />
+          <LaboratoryReports patientUniversityId={patientData?.universityId !== 'N/A' ? patientData?.universityId : null} />
           <MedicalCertificates />
         </div>
       </div>

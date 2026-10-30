@@ -16,14 +16,24 @@ interface TestRowItem {
   reportedByName?: string;
 }
 
-export default function LaboratoryReports() {
+interface LaboratoryReportsProps {
+  patientUniversityId?: string | null;
+}
+
+export default function LaboratoryReports({ patientUniversityId }: LaboratoryReportsProps = {}) {
   const user = useAuthStore((s) => s.user);
   const allRequests = useLaboratoryStore(s => s.requests);
   const allReports = useLaboratoryStore(s => s.reports);
   const fetchLaboratoryData = useLaboratoryStore(s => s.fetchLaboratoryData);
 
-  const [universityId, setUniversityId] = useState<string | null>(null);
+  const [universityId, setUniversityId] = useState<string | null>(patientUniversityId || null);
   const [filter, setFilter] = useState<'All' | 'Pending' | 'In Progress' | 'Completed'>('All');
+
+  useEffect(() => {
+    if (patientUniversityId) {
+      setUniversityId(patientUniversityId);
+    }
+  }, [patientUniversityId]);
 
   useEffect(() => {
     fetchLaboratoryData();
@@ -49,10 +59,14 @@ export default function LaboratoryReports() {
   // Strict patient data isolation
   const isUserMatch = (patientId: string) => {
     if (!patientId) return false;
-    const lower = patientId.toLowerCase();
+    const lower = patientId.toLowerCase().trim();
+    const uId = user?.id?.toLowerCase().trim();
+    const univId = (universityId || patientUniversityId)?.toLowerCase().trim();
+    const uEmail = user?.email?.toLowerCase().trim();
     return (
-      (user.id && lower === user.id.toLowerCase()) ||
-      (universityId && lower === universityId.toLowerCase())
+      (uId && lower === uId) ||
+      (univId && lower === univId) ||
+      (uEmail && lower === uEmail)
     );
   };
 

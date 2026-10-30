@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from '../store/useAuthStore';
 
 // Get the API URL from environment variables, fallback to localhost for dev
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
@@ -12,18 +13,9 @@ const api = axios.create({
 
 // Interceptor to automatically attach the Auth token
 api.interceptors.request.use((config) => {
-  // Zustand persist stores data in localStorage under 'auth-storage'
-  const storedAuth = localStorage.getItem('auth-storage');
-  if (storedAuth) {
-    try {
-      const parsed = JSON.parse(storedAuth);
-      const token = parsed.state?.token;
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    } catch (e) {
-      console.error('Error parsing auth token', e);
-    }
+  const token = useAuthStore.getState().token;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 }, (error) => {
@@ -35,11 +27,15 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Clear storage and redirect to login if unauthorized
-      console.warn('Unauthorized request - redirecting to login');
-      // If you are using useAuthStore, it might be better to call useAuthStore.getState().logout()
-      // localStorage.removeItem('auth-storage');
-      // window.location.href = '/login'; 
+      const url = error.config?.url || '';
+      const isAuthRoute = url.includes('/auth/login') || url.includes('/auth/signup');
+      if (!isAuthRoute) {
+        console.warn('Unauthorized request - redirecting to login');
+        useAuthStore.getState().logout();
+        if (!window.location.pathname.includes('/login')) {
+          window.location.href = '/login';
+        }
+      }
     }
     return Promise.reject(error);
   }

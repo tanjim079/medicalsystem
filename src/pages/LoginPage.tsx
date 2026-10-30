@@ -60,7 +60,7 @@ export default function LoginPage() {
         role: String(data.user.user_metadata?.role || data.user.app_metadata?.role || data.user.role || "patient").toLowerCase().trim(),
         email: data.user.email,
       };
-      setUser(userData, data.session.access_token);
+      setUser(userData, data.session.access_token, data.session.refresh_token);
       if (userData.role === "doctor") navigate("/doctor", { replace: true });
       else if (userData.role === "admin") navigate("/admin", { replace: true });
       else if (userData.role === "teacher") navigate("/teacher", { replace: true });

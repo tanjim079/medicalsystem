@@ -11,7 +11,9 @@ interface User {
 interface AuthState {
   user: User | null;
   token: string | null;
-  setUser: (user: User, token: string) => void;
+  refreshToken: string | null;
+  setUser: (user: User, token: string, refreshToken?: string | null) => void;
+  setToken: (token: string, refreshToken?: string | null) => void;
   logout: () => void;
 }
 
@@ -20,8 +22,15 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       token: null,
-      setUser: (user, token) => set({ user, token }),
-      logout: () => set({ user: null, token: null }),
+      refreshToken: null,
+      setUser: (user, token, refreshToken = null) => set({ user, token, refreshToken }),
+      setToken: (token, refreshToken) =>
+        set((state) => ({
+          ...state,
+          token,
+          ...(refreshToken !== undefined ? { refreshToken } : {}),
+        })),
+      logout: () => set({ user: null, token: null, refreshToken: null }),
     }),
     {
       name: "auth-storage",
