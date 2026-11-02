@@ -23,7 +23,12 @@ export default function ViewPrescriptionPage() {
     const [isDownloading, setIsDownloading] = useState(false);
 
     const prescriptions = usePrescriptionStore((s) => s.prescriptions);
+    const fetchPrescriptions = usePrescriptionStore((s) => s.fetchPrescriptions);
     const prescription = prescriptions.find(p => p.id === prescriptionId);
+
+    useEffect(() => {
+        fetchPrescriptions();
+    }, [fetchPrescriptions]);
 
     const [patient, setPatient] = useState<PatientInfo | null>(null);
 

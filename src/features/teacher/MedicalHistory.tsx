@@ -1,20 +1,49 @@
-﻿import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Clock, User } from "lucide-react";
 import { useAuthStore } from "../../store/useAuthStore";
 import { usePrescriptionStore } from "../../store/usePrescriptionStore";
 import { Link } from "react-router-dom";
+import { fetchAuth } from "../../lib/fetchAuth";
 
-export default function MedicalHistory() {
+interface MedicalHistoryProps {
+  patientUniversityId?: string | null;
+}
+
+export default function MedicalHistory({ patientUniversityId }: MedicalHistoryProps = {}) {
   const user = useAuthStore((s) => s.user);
   const getPrescriptionsByPatient = usePrescriptionStore((s) => s.getPrescriptionsByPatient);
   const fetchPrescriptions = usePrescriptionStore((s) => s.fetchPrescriptions);
+  const [universityId, setUniversityId] = useState<string | null>(patientUniversityId || null);
+
+  useEffect(() => {
+    if (patientUniversityId) {
+      setUniversityId(patientUniversityId);
+    }
+  }, [patientUniversityId]);
 
   useEffect(() => {
     fetchPrescriptions();
-  }, [fetchPrescriptions]);
+    if (user?.id && !universityId && !patientUniversityId) {
+      const fetchPatientInfo = async () => {
+        try {
+          const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+          const res = await fetchAuth(`${apiUrl}/patients/${user.id}`);
+          if (res.ok) {
+            const data = await res.json();
+            setUniversityId(data.roll_number || data.employee_id || data.email || null);
+          }
+        } catch (e) {
+          console.error("Error fetching patient university ID for medical history:", e);
+        }
+      };
+      fetchPatientInfo();
+    }
+  }, [fetchPrescriptions, user?.id, universityId, patientUniversityId]);
 
-  // Fetch actual prescriptions for the logged-in student
-  const history = user ? getPrescriptionsByPatient(user.id).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) : [];
+  // Fetch actual prescriptions for the logged-in teacher (matches either user.id or employee_id)
+  const history = user 
+    ? getPrescriptionsByPatient(user.id, universityId || patientUniversityId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()) 
+    : [];
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -99,4 +128,3 @@ export default function MedicalHistory() {
     </div>
   );
 }
-

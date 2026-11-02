@@ -29,7 +29,7 @@ interface PrescriptionState {
     loading: boolean;
     fetchPrescriptions: () => Promise<void>;
     addPrescription: (prescription: Omit<Prescription, 'id' | 'date' | 'status'>) => Promise<Prescription | null>;
-    getPrescriptionsByPatient: (patientId: string) => Prescription[];
+    getPrescriptionsByPatient: (patientId: string, alternateId?: string | null) => Prescription[];
     updatePrescriptionStatus: (id: string, status: 'dispensed') => Promise<boolean>;
 }
 
@@ -77,8 +77,13 @@ export const usePrescriptionStore = create<PrescriptionState>()((set, get) => ({
         }
     },
     
-    getPrescriptionsByPatient: (patientId) => {
-        return get().prescriptions.filter((p) => p.patientId.toLowerCase() === patientId.toLowerCase());
+    getPrescriptionsByPatient: (patientId, alternateId) => {
+        const pId = patientId ? patientId.toLowerCase().trim() : '';
+        const alt = alternateId ? alternateId.toLowerCase().trim() : '';
+        return get().prescriptions.filter((p) => {
+            const cur = p.patientId ? p.patientId.toLowerCase().trim() : '';
+            return (pId && cur === pId) || (alt && cur === alt);
+        });
     },
     
     updatePrescriptionStatus: async (id, status) => {

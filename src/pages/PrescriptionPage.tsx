@@ -136,7 +136,7 @@ export default function PrescriptionPage() {
         }
 
         await addPrescription({
-            patientId: patient?.universityId || id,
+            patientId: (patient?.universityId && patient.universityId !== 'N/A') ? patient.universityId : (patient?.id || id),
             patientName: patient?.name || 'Unknown Patient',
             doctorId: user?.id || "unknown",
             doctorName: user?.name || "Doctor",

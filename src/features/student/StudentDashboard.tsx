@@ -134,7 +134,7 @@ export default function StudentDashboard() {
         {/* RIGHT COLUMN: Appointments, Medical History, Certificates */}
         <div className="md:col-span-2 space-y-6">
           <AppointmentsList />
-          <MedicalHistory />
+          <MedicalHistory patientUniversityId={patientData?.universityId !== 'N/A' ? patientData?.universityId : null} />
           <LaboratoryReports patientUniversityId={patientData?.universityId !== 'N/A' ? patientData?.universityId : null} />
           <MedicalCertificates />
         </div>
