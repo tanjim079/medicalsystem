@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppointmentStore } from '../../store/useAppointmentStore';
 import { useAuthStore } from '../../store/useAuthStore';
 import {
@@ -13,12 +14,14 @@ import {
   Lock,
   Unlock,
   AlertTriangle,
+  UserPlus,
 } from 'lucide-react';
 import type { AppointmentStatus } from '../../types/appointment';
 
 type Tab = 'pending' | 'accepted' | 'rejected' | 'all';
 
 export default function AppointmentsPage() {
+  const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const appointments = useAppointmentStore((s) => s.appointments);
   const updateAppointmentStatus = useAppointmentStore((s) => s.updateAppointmentStatus);
@@ -41,10 +44,16 @@ export default function AppointmentsPage() {
 
   const myAppointments = appointments.filter((app) => app.doctorId === user.id);
 
-  const filteredAppointments = myAppointments.filter((app) => {
-    if (activeTab === 'all') return true;
-    return app.status === activeTab;
-  });
+  const filteredAppointments = myAppointments
+    .filter((app) => {
+      if (activeTab === 'all') return true;
+      return app.status === activeTab;
+    })
+    .sort((a, b) => {
+      const cmp = b.date.localeCompare(a.date);
+      if (cmp !== 0) return cmp;
+      return (b.time || '').localeCompare(a.time || '');
+    });
 
   const handleAccept = async (id: string) => {
     const res = await updateAppointmentStatus(id, 'accepted');
@@ -186,98 +195,110 @@ export default function AppointmentsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {filteredAppointments.map((app) => (
-            <div
-              key={app.id}
-              className="border border-slate-100 bg-white shadow-sm hover:shadow-md transition-shadow rounded-2xl p-5 sm:p-6"
-            >
-              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
-                <div className="flex-1 space-y-1">
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    <div className="flex items-center gap-2 font-bold text-lg text-slate-900">
-                      <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
-                        <User size={18} />
+          {filteredAppointments.map((app) => {
+            const displayPatientId = app.patientUniversityId || app.patientId;
+
+            return (
+              <div
+                key={app.id}
+                className="border border-slate-100 bg-white shadow-sm hover:shadow-md transition-shadow rounded-2xl p-5 sm:p-6"
+              >
+                <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
+                  <div className="flex-1 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <div className="flex items-center gap-2 font-bold text-lg text-slate-900">
+                        <div className="p-1.5 bg-blue-50 text-blue-600 rounded-lg">
+                          <User size={18} />
+                        </div>
+                        {app.patientName}
                       </div>
-                      {app.patientName}
+                      {getStatusBadge(app.status)}
+                      {getSlotStatePill(app.status)}
                     </div>
-                    {getStatusBadge(app.status)}
-                    {getSlotStatePill(app.status)}
+
+                    <div className="text-xs text-slate-500 font-medium ml-8 flex items-center gap-3">
+                      <span>ID: <strong className="text-slate-700 font-mono">{displayPatientId}</strong></span>
+                      <span>•</span>
+                      <span>Serial: <span className="font-mono text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded font-bold">{app.serialNumber || 'N/A'}</span></span>
+                    </div>
                   </div>
 
-                  <div className="text-xs text-slate-500 font-medium ml-8 flex items-center gap-3">
-                    <span>ID: <strong className="text-slate-700">{app.patientId}</strong></span>
-                    <span>•</span>
-                    <span>Serial: <span className="font-mono text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded font-bold">{app.serialNumber || 'N/A'}</span></span>
+                  {/* Actions */}
+                  <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                    {app.status === 'pending' && (
+                      <>
+                        <button
+                          onClick={() => handleAccept(app.id)}
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition font-bold text-xs shadow-sm hover:shadow active:scale-95"
+                        >
+                          <Check size={15} strokeWidth={2.5} /> Accept (Block Slot)
+                        </button>
+                        <button
+                          onClick={() =>
+                            setDeclineTarget({
+                              id: app.id,
+                              patientName: app.patientName,
+                              date: app.date,
+                              time: app.time,
+                              isAccepted: false,
+                            })
+                          }
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl transition font-bold text-xs active:scale-95"
+                        >
+                          <X size={15} strokeWidth={2.5} /> Decline (Free Slot)
+                        </button>
+                      </>
+                    )}
+
+                    {app.status === 'accepted' && (
+                      <>
+                        <button
+                          onClick={() => navigate(`/doctor/consultancy?patientId=${displayPatientId}`)}
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition font-bold text-xs shadow-sm hover:shadow active:scale-95"
+                        >
+                          <UserPlus size={14} /> Consult Patient
+                        </button>
+                        <button
+                          onClick={() =>
+                            setDeclineTarget({
+                              id: app.id,
+                              patientName: app.patientName,
+                              date: app.date,
+                              time: app.time,
+                              isAccepted: true,
+                            })
+                          }
+                          className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 rounded-xl transition font-semibold text-xs active:scale-95"
+                        >
+                          <X size={14} /> Decline & Free Slot
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex gap-2 w-full sm:w-auto">
-                  {app.status === 'pending' && (
-                    <>
-                      <button
-                        onClick={() => handleAccept(app.id)}
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition font-bold text-xs shadow-sm hover:shadow active:scale-95"
-                      >
-                        <Check size={15} strokeWidth={2.5} /> Accept (Block Slot)
-                      </button>
-                      <button
-                        onClick={() =>
-                          setDeclineTarget({
-                            id: app.id,
-                            patientName: app.patientName,
-                            date: app.date,
-                            time: app.time,
-                            isAccepted: false,
-                          })
-                        }
-                        className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-xl transition font-bold text-xs active:scale-95"
-                      >
-                        <X size={15} strokeWidth={2.5} /> Decline (Free Slot)
-                      </button>
-                    </>
-                  )}
+                {/* Date & Time pills */}
+                <div className="flex flex-wrap gap-3 text-xs text-slate-600 mb-4 sm:ml-8">
+                  <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                    <Calendar size={15} className="text-indigo-500" />
+                    <span className="font-semibold text-slate-700">{app.date}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+                    <Clock size={15} className="text-emerald-600" />
+                    <span className="font-semibold text-slate-700">{app.time}</span>
+                  </div>
+                </div>
 
-                  {app.status === 'accepted' && (
-                    <button
-                      onClick={() =>
-                        setDeclineTarget({
-                          id: app.id,
-                          patientName: app.patientName,
-                          date: app.date,
-                          time: app.time,
-                          isAccepted: true,
-                        })
-                      }
-                      className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 rounded-xl transition font-semibold text-xs active:scale-95"
-                    >
-                      <X size={14} /> Decline & Free Slot
-                    </button>
-                  )}
+                {/* Symptoms */}
+                <div className="text-xs sm:text-sm text-slate-700 bg-slate-50/70 p-4 rounded-xl border border-slate-100 sm:ml-8">
+                  <span className="font-bold block mb-1 text-slate-500 text-[11px] uppercase tracking-wider">
+                    Symptoms / Reason
+                  </span>
+                  {app.symptoms}
                 </div>
               </div>
-
-              {/* Date & Time pills */}
-              <div className="flex flex-wrap gap-3 text-xs text-slate-600 mb-4 sm:ml-8">
-                <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                  <Calendar size={15} className="text-indigo-500" />
-                  <span className="font-semibold text-slate-700">{app.date}</span>
-                </div>
-                <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-                  <Clock size={15} className="text-emerald-600" />
-                  <span className="font-semibold text-slate-700">{app.time}</span>
-                </div>
-              </div>
-
-              {/* Symptoms */}
-              <div className="text-xs sm:text-sm text-slate-700 bg-slate-50/70 p-4 rounded-xl border border-slate-100 sm:ml-8">
-                <span className="font-bold block mb-1 text-slate-500 text-[11px] uppercase tracking-wider">
-                  Symptoms / Reason
-                </span>
-                {app.symptoms}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

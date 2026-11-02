@@ -1,6 +1,6 @@
 import { Outlet, NavLink } from "react-router-dom";
 import MainLayout from "./MainLayout";
-import { LayoutDashboard, CalendarClock, UserPlus } from "lucide-react";
+import { LayoutDashboard, CalendarClock, UserPlus, FileText } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { Navigate } from "react-router-dom";
 
@@ -16,6 +16,7 @@ export default function DoctorLayout() {
     { name: "Dashboard", path: "/doctor", icon: <LayoutDashboard size={18} />, end: true },
     { name: "Appointments", path: "/doctor/appointments", icon: <CalendarClock size={18} /> },
     { name: "Consultancy", path: "/doctor/consultancy", icon: <UserPlus size={18} /> },
+    { name: "Prescriptions", path: "/doctor/prescriptions", icon: <FileText size={18} /> },
   ];
 
   return (

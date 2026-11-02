@@ -2,13 +2,21 @@ import { fetchAuth } from '../../lib/fetchAuth';
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import PatientDetails from "./PatientDetails";
-
+import TreatmentHistory from "./TreatmentHistory";
 import DoctorHeader from "./DoctorHeader";
 import RightPanel from "./RightPanel";
 import type { Patient } from "../../types/patient";
 
+interface TreatmentRecord {
+  id: string;
+  date: string;
+  diagnosis: string;
+  doctorName: string;
+  medicines?: unknown[];
+}
+
 interface ConsultancyPatient extends Patient {
-  treatmentHistory?: unknown[];
+  treatmentHistory?: TreatmentRecord[];
   labReports?: unknown[];
   visitSummary?: {
     totalVisits: number;
@@ -30,6 +38,7 @@ export default function ConsultancyPage() {
   useEffect(() => {
     const patientId = searchParams.get("patientId");
     if (!patientId) {
+      setSelectedPatient(null);
       return;
     }
 
@@ -38,8 +47,8 @@ export default function ConsultancyPage() {
       setLoading(true);
       try {
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-        // Search the real backend!
-        const response = await fetchAuth(`${apiUrl}/patients/${id}?t=${Date.now()}`);
+        // Search the backend
+        const response = await fetchAuth(`${apiUrl}/patients/${encodeURIComponent(id)}?t=${Date.now()}`);
         
         if (!response.ok) {
           throw new Error("Patient not found");
@@ -70,6 +79,7 @@ export default function ConsultancyPage() {
           const message = err instanceof Error ? err.message : "Failed to fetch patient data";
           alert(message);
           setSelectedPatient(null);
+          setSearchParams({});
         }
       } finally {
         if (isMounted) {
@@ -83,7 +93,7 @@ export default function ConsultancyPage() {
     return () => {
       isMounted = false;
     };
-  }, [searchParams]);
+  }, [searchParams, setSearchParams]);
 
   const handlePrescription = () => {
     if (!selectedPatient) {
@@ -106,7 +116,7 @@ export default function ConsultancyPage() {
         {loading ? (
           <div className="lg:col-span-5 flex flex-col items-center justify-center p-20 bg-white border border-gray-200 shadow-sm rounded-2xl text-gray-400">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-            <p className="font-medium text-gray-500">Searching for patient...</p>
+            <p className="font-medium text-gray-500">Searching for patient profile...</p>
           </div>
         ) : !selectedPatient ? (
           <div className="lg:col-span-5 text-center p-16 bg-white border border-gray-200 shadow-sm rounded-2xl">
@@ -114,16 +124,19 @@ export default function ConsultancyPage() {
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
             </div>
             <h3 className="text-lg font-bold text-gray-900 mb-1">No Patient Selected</h3>
-            <p className="text-gray-500 max-w-md mx-auto">Please search for a patient by ID (e.g. 2204001) to view their profile, create prescriptions, or issue medical certificates.</p>
+            <p className="text-gray-500 max-w-md mx-auto">
+              Please search for a patient by Roll Number / University ID (e.g. 2004001) or click "Consult" from an appointment to review history, create prescriptions, or issue medical certificates.
+            </p>
           </div>
         ) : (
           <>
-            {/* CENTER */}
+            {/* CENTER: Patient Details & History */}
             <div className="lg:col-span-3 space-y-6">
               <PatientDetails patient={selectedPatient} />
+              <TreatmentHistory patient={selectedPatient} />
             </div>
 
-            {/* RIGHT */}
+            {/* RIGHT: Actions & Laboratory Reports */}
             <div className="lg:col-span-2 space-y-6">
               <div className="flex gap-4">
                 <button
@@ -131,14 +144,14 @@ export default function ConsultancyPage() {
                   className="bg-blue-600 text-white px-5 py-3 rounded-xl hover:bg-blue-700 hover:shadow-lg transition-all duration-200 flex-1 text-sm font-bold shadow-md flex justify-center items-center gap-2 group"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:scale-110 transition-transform"><path d="M12 20h9"></path><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
-                  Prescription
+                  Write Prescription
                 </button>
                 <button
                   onClick={() => navigate(`/certificate/create/${selectedPatient.id}`)}
                   className="bg-emerald-600 text-white px-5 py-3 rounded-xl hover:bg-emerald-700 hover:shadow-lg transition-all duration-200 flex-1 text-sm font-bold shadow-md flex justify-center items-center gap-2 group"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:scale-110 transition-transform"><path d="M12 22h6a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v10"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 15v5"></path><path d="M7 17.5l3-2.5 3 2.5"></path></svg>
-                  Certificate
+                  Issue Certificate
                 </button>
               </div>
               <RightPanel patient={selectedPatient} />

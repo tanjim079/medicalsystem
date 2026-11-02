@@ -27,6 +27,7 @@ import DoctorsPage from "./features/admin/doctors/DoctorsPage";
 import DoctorLayout from "./layouts/DoctorLayout";
 import AppointmentsPage from "./features/doctor/AppointmentsPage";
 import ConsultancyPage from "./features/doctor/ConsultancyPage";
+import DoctorPrescriptionsPage from "./features/doctor/DoctorPrescriptionsPage";
 import ScrollToTop from "./components/ScrollToTop";
 import PathologistLayout from "./layouts/PathologistLayout";
 import PathologistDashboard from "./features/pathologist/PathologistDashboard";
@@ -78,6 +79,7 @@ function App() {
           <Route index element={<DoctorDashboard />} />
           <Route path="appointments" element={<AppointmentsPage />} />
           <Route path="consultancy" element={<ConsultancyPage />} />
+          <Route path="prescriptions" element={<DoctorPrescriptionsPage />} />
         </Route>
 
         {/* Pathologist Routes */}
