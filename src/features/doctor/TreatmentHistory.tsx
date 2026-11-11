@@ -18,6 +18,7 @@ interface Props {
       totalVisits: number;
       lastVisit: string | null;
     };
+    hasClinicalRelationship?: boolean;
   } | null;
 }
 
@@ -47,7 +48,17 @@ export default function TreatmentHistory({ patient }: Props) {
         </span>
       </div>
 
-      {history.length === 0 ? (
+      {patient.hasClinicalRelationship === false ? (
+        <div className="text-sm bg-blue-50/70 p-5 rounded-xl border border-blue-200/80 text-blue-900 space-y-2">
+          <div className="flex items-center gap-2 font-semibold text-blue-800 text-sm">
+            <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-pulse"></span>
+            Walk-In Patient (New Consultation)
+          </div>
+          <p className="text-xs text-blue-700 leading-relaxed">
+            No active prior clinical relationship exists with your account. Prior medical history and laboratory reports are protected under patient privacy rules until a consultation, prescription, or certificate is initiated.
+          </p>
+        </div>
+      ) : history.length === 0 ? (
         <div className="text-sm text-gray-400 italic bg-gray-50/50 p-6 rounded-lg text-center border border-gray-100 border-dashed">
           No previous treatment history or prescriptions recorded for this patient.
         </div>

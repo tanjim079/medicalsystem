@@ -26,7 +26,10 @@ export default function CreateCertificatePage() {
       if (!patientId) return;
       try {
         const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-        const res = await fetchAuth(`${API_URL}/patients/${patientId}`);
+        let res = await fetchAuth(`${API_URL}/patients/${encodeURIComponent(patientId)}`);
+        if (!res.ok && (res.status === 403 || res.status === 404)) {
+          res = await fetchAuth(`${API_URL}/patients/search?query=${encodeURIComponent(patientId)}`);
+        }
         if (res.ok) {
           const data = await res.json();
           setPatient({

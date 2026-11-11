@@ -22,6 +22,7 @@ interface ConsultancyPatient extends Patient {
     totalVisits: number;
     lastVisit: string | null;
   };
+  hasClinicalRelationship?: boolean;
 }
 
 export default function ConsultancyPage() {
@@ -47,11 +48,31 @@ export default function ConsultancyPage() {
       setLoading(true);
       try {
         const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-        // Search the backend
-        const response = await fetchAuth(`${apiUrl}/patients/${encodeURIComponent(id)}?t=${Date.now()}`);
+        // Search backend using the dedicated discovery endpoint
+        const response = await fetchAuth(`${apiUrl}/patients/search?query=${encodeURIComponent(id)}&t=${Date.now()}`);
         
         if (!response.ok) {
-          throw new Error("Patient not found");
+          let errorDetail = "";
+          try {
+            const errData = await response.json();
+            errorDetail = errData?.error || "";
+          } catch {
+            // non-JSON response body
+          }
+
+          if (response.status === 400) {
+            throw new Error(errorDetail || "Invalid search query parameter.");
+          } else if (response.status === 401) {
+            throw new Error("Authentication session expired. Please log in again.");
+          } else if (response.status === 403) {
+            throw new Error(`Access Denied (403): ${errorDetail || "You are not authorized to search patient directories."}`);
+          } else if (response.status === 404) {
+            throw new Error(`Patient "${id}" not found. Please verify the roll number or employee ID.`);
+          } else if (response.status >= 500) {
+            throw new Error("Internal server error. Please try again later.");
+          } else {
+            throw new Error(errorDetail || `Request failed with HTTP ${response.status}`);
+          }
         }
         
         const data = await response.json();
@@ -68,7 +89,8 @@ export default function ConsultancyPage() {
           guardianPhone: data.guardian_phone || "N/A",
           treatmentHistory: data.treatmentHistory || [],
           labReports: data.labReports || [],
-          visitSummary: data.visitSummary || { totalVisits: 0, lastVisit: null }
+          visitSummary: data.visitSummary || { totalVisits: 0, lastVisit: null },
+          hasClinicalRelationship: data.hasClinicalRelationship ?? (Array.isArray(data.treatmentHistory) && data.treatmentHistory.length > 0)
         };
 
         if (isMounted) {

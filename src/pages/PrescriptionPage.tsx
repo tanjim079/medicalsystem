@@ -53,7 +53,10 @@ export default function PrescriptionPage() {
             const fetchPatient = async () => {
                 try {
                     const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-                    const response = await fetchAuth(`${apiUrl}/patients/${id}`);
+                    let response = await fetchAuth(`${apiUrl}/patients/${encodeURIComponent(id)}`);
+                    if (!response.ok && (response.status === 403 || response.status === 404)) {
+                        response = await fetchAuth(`${apiUrl}/patients/search?query=${encodeURIComponent(id)}`);
+                    }
                     if (response.ok) {
                         const data = await response.json();
                         setPatient({
