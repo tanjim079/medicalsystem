@@ -24,6 +24,11 @@ import AdminDashboard from "./features/admin/AdminDashboard";
 import UsersPage from "./features/admin/users/UsersPage";
 import MedicinesPage from "./features/admin/medicines/MedicinesPage";
 import DoctorsPage from "./features/admin/doctors/DoctorsPage";
+import AdminAppointmentsPage from "./features/admin/appointments/AdminAppointmentsPage";
+import BillingPage from "./features/admin/billing/BillingPage";
+import LabTestsPage from "./features/admin/tests/LabTestsPage";
+import DirectoryPage from "./features/admin/directory/DirectoryPage";
+import SettingsPage from "./features/admin/settings/SettingsPage";
 import DoctorLayout from "./layouts/DoctorLayout";
 import AppointmentsPage from "./features/doctor/AppointmentsPage";
 import ConsultancyPage from "./features/doctor/ConsultancyPage";
@@ -73,6 +78,12 @@ function App() {
           <Route path="users" element={<UsersPage />} />
           <Route path="medicines" element={<MedicinesPage />} />
           <Route path="doctors" element={<DoctorsPage />} />
+          <Route path="appointments" element={<AdminAppointmentsPage />} />
+          <Route path="tests" element={<LabTestsPage />} />
+          <Route path="billing" element={<BillingPage />} />
+          <Route path="directory" element={<DirectoryPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="*" element={<Navigate to="/admin" replace />} />
         </Route>
 
         <Route path="/doctor" element={<DoctorLayout />}>

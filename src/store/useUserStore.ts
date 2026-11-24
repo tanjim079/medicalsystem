@@ -1,96 +1,119 @@
-import { fetchAuth } from '../lib/fetchAuth';
 import { create } from 'zustand';
+import { apiRequest } from '../features/admin/lib/adminApi';
+
+export type AccountType =
+  | "student" | "teacher" | "officer" | "patient"
+  | "doctor" | "receptionist" | "pathologist" | "pharmacist" | "staff" | "admin";
+
+export interface PatientDetails {
+  id?: string;
+  roll_number?: string | null;
+  registration_number?: string | null;
+  phone?: string | null;
+  blood_group?: string | null;
+  guardian_name?: string | null;
+  guardian_phone?: string | null;
+  department?: string | null;
+  age?: number | string | null;
+}
 
 export interface UserProfile {
   id: string;
   name: string;
   email: string;
-  role: "doctor" | "patient" | "student" | "teacher" | "officer" | "admin" | "receptionist" | "pathologist";
+  /** Authoritative database role (public.profiles.role). */
+  role: AccountType;
+  /** Presentation-level account type (e.g. student/officer map to the `patient` role). */
+  accountType?: AccountType;
+  status?: "active" | "disabled";
+  lastSignInAt?: string | null;
+  emailConfirmed?: boolean | null;
+  patients?: PatientDetails | null;
   created_at?: string;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+export interface UserPayload {
+  name: string;
+  email: string;
+  password?: string;
+  role: AccountType;
+  patientData?: {
+    universityId?: string;
+    phone?: string;
+    bloodGroup?: string;
+    guardianName?: string;
+    guardianPhone?: string;
+    department?: string;
+    age?: string;
+  };
+}
 
 interface UserState {
   users: UserProfile[];
   loading: boolean;
+  error: string | null;
   fetchUsers: (role?: string) => Promise<void>;
   getDoctors: () => UserProfile[];
-  addUser: (userData: Omit<UserProfile, 'id'>) => Promise<void>;
-  updateUser: (id: string, userData: Partial<UserProfile>) => Promise<void>;
+  addUser: (userData: UserPayload) => Promise<UserProfile & { warning?: string }>;
+  updateUser: (id: string, userData: Partial<UserPayload>) => Promise<void>;
+  setUserStatus: (id: string, active: boolean) => Promise<void>;
+  resetPassword: (id: string, password: string) => Promise<void>;
   deleteUser: (id: string) => Promise<void>;
 }
+
+export const accountTypeOf = (u: Pick<UserProfile, 'role' | 'accountType'>): AccountType => u.accountType || u.role;
 
 export const useUserStore = create<UserState>()((set, get) => ({
   users: [],
   loading: false,
+  error: null,
 
   fetchUsers: async (role?: string) => {
-    set({ loading: true });
+    set({ loading: true, error: null });
     try {
-      const query = role ? `?role=${role}` : '';
-      const response = await fetchAuth(`${API_URL}/users${query}`);
-      if (response.ok) {
-        const data = await response.json();
-        set({ users: data });
-      }
+      const query = role ? `?role=${encodeURIComponent(role)}` : '';
+      const data = await apiRequest<UserProfile[]>(`/users${query}`);
+      set({ users: data || [] });
     } catch (error) {
       console.error("Error fetching users:", error);
+      set({ error: error instanceof Error ? error.message : 'Failed to load users' });
     } finally {
       set({ loading: false });
     }
   },
 
-  getDoctors: () => {
-    return get().users.filter(u => u.role === 'doctor');
+  getDoctors: () => get().users.filter(u => u.role === 'doctor'),
+
+  addUser: async (userData) => {
+    const created = await apiRequest<UserProfile & { warning?: string }>('/users', { method: 'POST', json: userData });
+    set((state) => ({
+      users: [...state.users, created].sort((a, b) => a.name.localeCompare(b.name)),
+    }));
+    return created;
   },
 
-  addUser: async (userData: Omit<UserProfile, 'id'>) => {
-    try {
-      const response = await fetchAuth(`${API_URL}/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-      });
-      if (response.ok) {
-        const newUser = await response.json();
-        set((state) => ({ users: [...state.users, newUser] }));
-      }
-    } catch (error) {
-      console.error("Error adding user:", error);
-    }
+  updateUser: async (id, userData) => {
+    const payload = { ...userData };
+    if (!payload.password) delete payload.password;
+    const updated = await apiRequest<Partial<UserProfile>>(`/users/${id}`, { method: 'PUT', json: payload });
+    set((state) => ({
+      users: state.users.map((u) => (u.id === id ? { ...u, ...updated } : u)),
+    }));
   },
 
-  updateUser: async (id: string, userData: Partial<UserProfile>) => {
-    try {
-      const response = await fetchAuth(`${API_URL}/users/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData),
-      });
-      if (response.ok) {
-        const updatedUser = await response.json();
-        set((state) => ({
-          users: state.users.map((u) => (u.id === id ? { ...u, ...updatedUser } : u)),
-        }));
-      }
-    } catch (error) {
-      console.error("Error updating user:", error);
-    }
+  setUserStatus: async (id, active) => {
+    const res = await apiRequest<{ status: "active" | "disabled" }>(`/users/${id}/status`, { method: 'PATCH', json: { active } });
+    set((state) => ({
+      users: state.users.map((u) => (u.id === id ? { ...u, status: res.status } : u)),
+    }));
   },
 
-  deleteUser: async (id: string) => {
-    try {
-      const response = await fetchAuth(`${API_URL}/users/${id}`, {
-        method: 'DELETE',
-      });
-      if (response.ok) {
-        set((state) => ({
-          users: state.users.filter((u) => u.id !== id),
-        }));
-      }
-    } catch (error) {
-      console.error("Error deleting user:", error);
-    }
-  }
+  resetPassword: async (id, password) => {
+    await apiRequest(`/users/${id}/password`, { method: 'PUT', json: { password } });
+  },
+
+  deleteUser: async (id) => {
+    await apiRequest(`/users/${id}`, { method: 'DELETE' });
+    set((state) => ({ users: state.users.filter((u) => u.id !== id) }));
+  },
 }));

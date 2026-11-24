@@ -1,282 +1,404 @@
-import { useState, useEffect } from "react";
-import { useUserStore, type UserProfile } from "../../../store/useUserStore";
-import { Plus, Search, Edit2, Trash2, X } from "lucide-react";
-import Button from "../../../components/ui/Button";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { Plus, Download, Pencil, KeyRound, Ban, CheckCircle2, Trash2, Eye, Users, RefreshCw } from "lucide-react";
+import { useUserStore, accountTypeOf, type UserProfile } from "../../../store/useUserStore";
+import { useAuthStore } from "../../../store/useAuthStore";
+import {
+  PageHeader, Panel, Btn, IconBtn, SearchInput, SelectInput, Pagination, TableSkeleton, EmptyState, ErrorBanner,
+  ConfirmDialog, Modal, Field, TextInput, Pill, th, td,
+} from "../components/ui";
+import UserFormModal from "./UserFormModal";
+import { ROLE_OPTIONS } from "../lib/roles";
+import { usePage, useQueryState } from "../lib/hooks";
+import { ROLE_LABELS, ROLE_BADGE, formatDate, formatDateTime, exportCsv } from "../lib/format";
+import { toast } from "../lib/useToastStore";
+import { errorMessage } from "../lib/adminApi";
+
+const PAGE_SIZE = 15;
+type SortKey = "name" | "created_at" | "lastSignInAt";
 
 export default function UsersPage() {
-  const { users, fetchUsers, addUser, updateUser, deleteUser, loading } = useUserStore();
-  const [search, setSearch] = useState("");
-  const [filterRole, setFilterRole] = useState<string>("all");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<UserProfile | null>(null);
+  const { users, fetchUsers, deleteUser, setUserStatus, resetPassword, loading, error } = useUserStore();
+  const me = useAuthStore((s) => s.user);
+  // Search and role live in the URL so the header search box and dashboard links can deep-link here.
+  const [search, setSearch] = useQueryState("q");
+  const [roleFilter, setRoleFilter] = useQueryState("role", "all");
+  const [newParam, setNewParam] = useQueryState("new");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sort, setSort] = useState<SortKey>("name");
+  const [page, setPage] = usePage(`${search}|${roleFilter}|${statusFilter}|${sort}`);
 
-  // Form State
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: 'student',
-    patientData: {
-      universityId: "",
-      phone: "",
-      bloodGroup: "",
-      guardianName: "",
-      guardianPhone: "",
-      department: "",
-      age: "",
-    }
-  });
+  const [formOpenLocal, setFormOpen] = useState(false);
+  const formOpen = formOpenLocal || newParam === "1";
+  const [editing, setEditing] = useState<UserProfile | null>(null);
+  const [viewing, setViewing] = useState<UserProfile | null>(null);
+  const [deleting, setDeleting] = useState<UserProfile | null>(null);
+  const [toggling, setToggling] = useState<UserProfile | null>(null);
+  const [resetting, setResetting] = useState<UserProfile | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
 
-  const filteredUsers = users.filter((u) => {
-    const matchesSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
-    const matchesRole = filterRole === "all" || u.role === filterRole;
-    return matchesSearch && matchesRole;
-  });
+  const roleCounts = useMemo(() => {
+    const c: Record<string, number> = {};
+    users.forEach((u) => {
+      const t = accountTypeOf(u);
+      c[t] = (c[t] || 0) + 1;
+    });
+    return c;
+  }, [users]);
 
-  const handleOpenModal = (user?: UserProfile) => {
-    if (user) {
-      setEditingUser(user);
-      const p = (user as any).patients?.[0] || (user as any).patients || {};
-      setFormData({ name: user.name, email: user.email, password: "", role: user.role, patientData: { universityId: p.roll_number || "", phone: p.phone || "", bloodGroup: p.blood_group || "", guardianName: p.guardian_name || "", guardianPhone: p.guardian_phone || "", department: p.department || "", age: p.age || "" } });
-    } else {
-      setEditingUser(null);
-      setFormData({ name: "", email: "", password: "", role: 'student', patientData: { universityId: "", phone: "", bloodGroup: "", guardianName: "", guardianPhone: "", department: "", age: "" } });
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const list = users.filter((u) => {
+      const type = accountTypeOf(u);
+      if (roleFilter !== "all" && type !== roleFilter) return false;
+      if (statusFilter !== "all" && (u.status || "active") !== statusFilter) return false;
+      if (!q) return true;
+      return [u.name, u.email, u.patients?.roll_number, u.patients?.department, u.patients?.phone]
+        .some((v) => v && String(v).toLowerCase().includes(q));
+    });
+    return list.sort((a, b) => {
+      if (sort === "name") return (a.name || "").localeCompare(b.name || "");
+      const av = a[sort] ? new Date(a[sort] as string).getTime() : 0;
+      const bv = b[sort] ? new Date(b[sort] as string).getTime() : 0;
+      return bv - av;
+    });
+  }, [users, search, roleFilter, statusFilter, sort]);
+
+  const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const disabledCount = users.filter((u) => u.status === "disabled").length;
+
+  const handleExport = () => {
+    exportCsv(`ruet-medical-users-${new Date().toISOString().slice(0, 10)}.csv`, filtered.map((u) => ({
+      Name: u.name,
+      Email: u.email,
+      Role: ROLE_LABELS[accountTypeOf(u)] || accountTypeOf(u),
+      Status: u.status || "active",
+      "University ID": u.patients?.roll_number || "",
+      Department: u.patients?.department || "",
+      Phone: u.patients?.phone || "",
+      "Blood group": u.patients?.blood_group || "",
+      Created: u.created_at ? formatDate(u.created_at) : "",
+      "Last sign-in": u.lastSignInAt ? formatDateTime(u.lastSignInAt) : "",
+    })));
+  };
+
+  const confirmDelete = async () => {
+    if (!deleting) return;
+    setBusy(true);
+    try {
+      await deleteUser(deleting.id);
+      toast.success(`${deleting.name} was deleted`);
+      setDeleting(null);
+    } catch (err) {
+      toast.error(errorMessage(err, "Could not delete user"));
+    } finally {
+      setBusy(false);
     }
-    setIsModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingUser(null);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (editingUser) {
-      await updateUser(editingUser.id, formData as any);
-    } else {
-      await addUser(formData as any);
-    }
-    handleCloseModal();
-  };
-
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      await deleteUser(id);
+  const confirmToggle = async () => {
+    if (!toggling) return;
+    const activate = toggling.status === "disabled";
+    setBusy(true);
+    try {
+      await setUserStatus(toggling.id, activate);
+      toast.success(`${toggling.name} ${activate ? "can sign in again" : "has been disabled"}`);
+      setToggling(null);
+    } catch (err) {
+      toast.error(errorMessage(err, "Could not update account status"));
+    } finally {
+      setBusy(false);
     }
   };
+
+  const isMe = (u: UserProfile) => u.id === me?.id;
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
-        <Button onClick={() => handleOpenModal()} className="flex items-center gap-2">
-          <Plus size={18} /> Add User
-        </Button>
+      <PageHeader
+        title="Users"
+        description="Create accounts, assign roles, and control who can sign in."
+        actions={
+          <>
+            <Btn variant="secondary" icon={<Download size={16} />} onClick={handleExport} disabled={filtered.length === 0}>Export CSV</Btn>
+            <Btn icon={<Plus size={16} />} onClick={() => { setEditing(null); setFormOpen(true); }}>New user</Btn>
+          </>
+        }
+      />
+
+      {/* Role quick filters */}
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {[{ value: "all", label: "All", count: users.length }, ...ROLE_OPTIONS.map((o) => ({ value: o.value, label: ROLE_LABELS[o.value], count: roleCounts[o.value] || 0 }))]
+          .filter((c) => c.value === "all" || c.count > 0 || roleFilter === c.value)
+          .map((c) => (
+            <button
+              key={c.value}
+              onClick={() => setRoleFilter(c.value)}
+              className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium ring-1 ring-inset transition ${
+                roleFilter === c.value ? "bg-indigo-600 text-white ring-indigo-600" : "bg-white text-slate-600 ring-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              {c.label} <span className={roleFilter === c.value ? "text-indigo-200" : "text-slate-400"}>{c.count}</span>
+            </button>
+          ))}
       </div>
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            <input
-              type="text"
-              placeholder="Search by name or email..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-            />
+      {error && <ErrorBanner message={error} onRetry={() => fetchUsers()} />}
+
+      <Panel bodyClassName="p-0">
+        <div className="flex flex-col gap-3 border-b border-slate-100 p-4 md:flex-row md:items-center">
+          <SearchInput value={search} onChange={setSearch} placeholder="Search name, email, roll number, department…" className="flex-1" />
+          <div className="flex gap-2">
+            <SelectInput value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-36" aria-label="Status filter">
+              <option value="all">All statuses</option>
+              <option value="active">Active</option>
+              <option value="disabled">Disabled{disabledCount ? ` (${disabledCount})` : ""}</option>
+            </SelectInput>
+            <SelectInput value={sort} onChange={(e) => setSort(e.target.value as SortKey)} className="w-40" aria-label="Sort">
+              <option value="name">Sort: Name</option>
+              <option value="created_at">Sort: Newest</option>
+              <option value="lastSignInAt">Sort: Last sign-in</option>
+            </SelectInput>
+            <IconBtn label="Reload" onClick={() => fetchUsers()} className="ring-1 ring-slate-200 px-2.5">
+              <RefreshCw size={16} className={loading ? "animate-spin" : ""} />
+            </IconBtn>
           </div>
-          <select
-            value={filterRole}
-            onChange={(e) => setFilterRole(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-          >
-            <option value="all">All Roles</option>
-            <option value="student">Student</option>
-            <option value="teacher">Teacher</option>
-            <option value="officer">Officer</option>
-            <option value="doctor">Doctor</option>
-            <option value="staff">Staff</option>
-            <option value="receptionist">Receptionist</option>
-            <option value="pathologist">Pathologist</option>
-            <option value="admin">Admin</option>
-          </select>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[600px]">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 text-sm">
-                <th className="p-3 font-medium rounded-tl-lg">Name</th>
-                <th className="p-3 font-medium">Email</th>
-                <th className="p-3 font-medium">Role</th>
-                <th className="p-3 font-medium text-right rounded-tr-lg">Actions</th>
+          <table className="w-full min-w-[760px]">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className={th}>User</th>
+                <th className={th}>Role</th>
+                <th className={th}>University ID</th>
+                <th className={th}>Status</th>
+                <th className={th}>Last sign-in</th>
+                <th className={`${th} text-right`}>Actions</th>
               </tr>
             </thead>
-            <tbody>
-              {loading ? (
+            <tbody className="divide-y divide-slate-100">
+              {loading && users.length === 0 ? (
+                <TableSkeleton cols={6} />
+              ) : pageRows.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center p-8 text-gray-500">Loading users...</td>
-                </tr>
-              ) : filteredUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="text-center p-8 text-gray-500">No users found</td>
+                  <td colSpan={6}>
+                    <EmptyState
+                      icon={<Users size={22} />}
+                      title={users.length === 0 ? "No users yet" : "No users match your filters"}
+                      description={users.length === 0 ? "Create the first account to get started." : "Try a different search term or clear the filters."}
+                      action={users.length > 0 && (
+                        <Btn variant="secondary" size="sm" onClick={() => { setSearch(""); setRoleFilter("all"); setStatusFilter("all"); }}>Clear filters</Btn>
+                      )}
+                    />
+                  </td>
                 </tr>
               ) : (
-                filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                    <td className="p-3 font-medium text-gray-800">{user.name}</td>
-                    <td className="p-3 text-gray-600">{user.email}</td>
-                    <td className="p-3">
-                      <span className="px-2.5 py-1 text-xs font-medium bg-indigo-100 text-indigo-700 rounded-full capitalize">
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="p-3 flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleOpenModal(user)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        title="Edit User"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(user.id)}
-                        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors"
-                        title="Delete User"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                pageRows.map((u) => {
+                  const type = accountTypeOf(u);
+                  const disabled = u.status === "disabled";
+                  return (
+                    <tr key={u.id} className={`hover:bg-slate-50/60 ${disabled ? "opacity-70" : ""}`}>
+                      <td className={td}>
+                        <div className="flex items-center gap-3">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">
+                            {u.name?.charAt(0)?.toUpperCase() || "?"}
+                          </span>
+                          <div className="min-w-0">
+                            <p className="truncate font-medium text-slate-900">
+                              {u.name} {isMe(u) && <span className="ml-1 text-xs font-normal text-slate-400">(you)</span>}
+                            </p>
+                            <p className="truncate text-xs text-slate-500">{u.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className={td}>
+                        <Pill className={ROLE_BADGE[type] || ROLE_BADGE.staff}>{ROLE_LABELS[type] || type}</Pill>
+                      </td>
+                      <td className={`${td} tabular-nums`}>{u.patients?.roll_number || <span className="text-slate-300">—</span>}</td>
+                      <td className={td}>
+                        {disabled ? (
+                          <Pill className="bg-rose-50 text-rose-700 ring-rose-600/20"><Ban size={12} /> Disabled</Pill>
+                        ) : (
+                          <Pill className="bg-emerald-50 text-emerald-700 ring-emerald-600/20"><CheckCircle2 size={12} /> Active</Pill>
+                        )}
+                      </td>
+                      <td className={`${td} text-xs text-slate-500`}>{u.lastSignInAt ? formatDateTime(u.lastSignInAt) : "Never"}</td>
+                      <td className={`${td} text-right`}>
+                        <div className="flex justify-end gap-0.5">
+                          <IconBtn label="View details" onClick={() => setViewing(u)}><Eye size={16} /></IconBtn>
+                          <IconBtn label="Edit" tone="indigo" onClick={() => { setEditing(u); setFormOpen(true); }}><Pencil size={16} /></IconBtn>
+                          <IconBtn label="Reset password" tone="amber" onClick={() => setResetting(u)}><KeyRound size={16} /></IconBtn>
+                          <IconBtn
+                            label={disabled ? "Enable account" : "Disable account"}
+                            tone={disabled ? "emerald" : "slate"}
+                            disabled={isMe(u)}
+                            onClick={() => setToggling(u)}
+                          >
+                            {disabled ? <CheckCircle2 size={16} /> : <Ban size={16} />}
+                          </IconBtn>
+                          <IconBtn label="Delete" tone="rose" disabled={isMe(u)} onClick={() => setDeleting(u)}><Trash2 size={16} /></IconBtn>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
-      </div>
+        <Pagination page={page} pageSize={PAGE_SIZE} total={filtered.length} onPage={setPage} />
+      </Panel>
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50 shrink-0">
-              <h2 className="text-lg font-bold text-gray-800">{editingUser ? "Edit User" : "Add New User"}</h2>
-              <button onClick={handleCloseModal} className="text-gray-500 hover:text-gray-700">
-                <X size={20} />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit} className="flex flex-col overflow-hidden h-full">
-              <div className="p-4 space-y-4 overflow-y-auto">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                  <input
-                    required
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                    placeholder="John Doe"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email / User ID</label>
-                  <input
-                    required
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                    placeholder="john@example.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Password {editingUser && <span className="text-gray-400 font-normal">(Leave blank to keep current)</span>}
-                  </label>
-                  <input
-                    required={!editingUser}
-                    type="password"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                    placeholder={editingUser ? "Enter new password if changing..." : "Assign a strong password"}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                  <select
-                    required
-                    value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-                  >
-                    <option value="student">Student</option>
-                    <option value="teacher">Teacher</option>
-                    <option value="officer">Officer</option>
-                    <option value="doctor">Doctor</option>
-                    <option value="staff">Staff</option>
-                    <option value="receptionist">Receptionist</option>
-                    <option value="pathologist">Pathologist</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-                
-                {['student', 'teacher', 'officer', 'patient'].includes(formData.role) && (
-                  <>
-                    <div className="pt-4 border-t border-gray-100 mt-2">
-                      <h3 className="text-sm font-semibold text-gray-800 mb-3">Patient Details</h3>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">University ID (Roll/Emp ID)</label>
-                      <input type="text" value={formData.patientData.universityId} onChange={(e) => setFormData({ ...formData, patientData: { ...formData.patientData, universityId: e.target.value } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                        <input type="text" value={formData.patientData.department} onChange={(e) => setFormData({ ...formData, patientData: { ...formData.patientData, department: e.target.value } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Blood Group</label>
-                        <input type="text" value={formData.patientData.bloodGroup} onChange={(e) => setFormData({ ...formData, patientData: { ...formData.patientData, bloodGroup: e.target.value } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                        <input type="text" value={formData.patientData.phone} onChange={(e) => setFormData({ ...formData, patientData: { ...formData.patientData, phone: e.target.value } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                        <input type="text" value={formData.patientData.age} onChange={(e) => setFormData({ ...formData, patientData: { ...formData.patientData, age: e.target.value } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Guardian Name</label>
-                        <input type="text" value={formData.patientData.guardianName} onChange={(e) => setFormData({ ...formData, patientData: { ...formData.patientData, guardianName: e.target.value } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Guardian Phone</label>
-                        <input type="text" value={formData.patientData.guardianPhone} onChange={(e) => setFormData({ ...formData, patientData: { ...formData.patientData, guardianPhone: e.target.value } })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" />
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
+      <UserFormModal open={formOpen} onClose={() => { setFormOpen(false); setNewParam(""); setEditing(null); }} user={editing} />
 
-              <div className="flex justify-end gap-3 p-4 border-t border-gray-200 bg-gray-50 shrink-0">
-                <Button type="button" variant="outline" onClick={handleCloseModal}>Cancel</Button>
-                <Button type="submit">{editingUser ? "Save Changes" : "Create User"}</Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <UserDetailModal user={viewing} onClose={() => setViewing(null)} onEdit={(u) => { setViewing(null); setEditing(u); setFormOpen(true); }} />
+
+      <ResetPasswordModal user={resetting} onClose={() => setResetting(null)} onSubmit={resetPassword} />
+
+      <ConfirmDialog
+        open={!!deleting}
+        title="Delete user?"
+        message={<>This permanently removes <strong>{deleting?.name}</strong>'s account and sign-in. Existing clinical records (appointments, prescriptions, bills) are kept. This cannot be undone.</>}
+        confirmLabel="Delete user"
+        loading={busy}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleting(null)}
+      />
+
+      <ConfirmDialog
+        open={!!toggling}
+        title={toggling?.status === "disabled" ? "Enable account?" : "Disable account?"}
+        message={toggling?.status === "disabled"
+          ? <><strong>{toggling?.name}</strong> will be able to sign in again.</>
+          : <><strong>{toggling?.name}</strong> will no longer be able to sign in. Their data is kept and you can re-enable the account at any time.</>}
+        confirmLabel={toggling?.status === "disabled" ? "Enable" : "Disable"}
+        tone={toggling?.status === "disabled" ? "primary" : "danger"}
+        loading={busy}
+        onConfirm={confirmToggle}
+        onCancel={() => setToggling(null)}
+      />
     </div>
   );
 }
 
+function UserDetailModal({ user, onClose, onEdit }: { user: UserProfile | null; onClose: () => void; onEdit: (u: UserProfile) => void }) {
+  if (!user) return null;
+  const type = accountTypeOf(user);
+  const p = user.patients;
+  const rows: [string, React.ReactNode][] = [
+    ["Email", user.email],
+    ["Role", ROLE_LABELS[type] || type],
+    ["System role", user.role],
+    ["Status", user.status === "disabled" ? "Disabled" : "Active"],
+    ["Email verified", user.emailConfirmed == null ? "—" : user.emailConfirmed ? "Yes" : "No"],
+    ["Created", formatDateTime(user.created_at)],
+    ["Last sign-in", user.lastSignInAt ? formatDateTime(user.lastSignInAt) : "Never"],
+  ];
+  const patientRows: [string, React.ReactNode][] = p ? [
+    ["University ID", p.roll_number || "—"],
+    ["Registration no.", p.registration_number || "—"],
+    ["Department", p.department || "—"],
+    ["Phone", p.phone || "—"],
+    ["Age", p.age ?? "—"],
+    ["Blood group", p.blood_group || "—"],
+    ["Guardian", p.guardian_name || "—"],
+    ["Guardian phone", p.guardian_phone || "—"],
+  ] : [];
 
+  return (
+    <Modal open onClose={onClose} title={user.name} description={ROLE_LABELS[type]} footer={
+      <>
+        <Btn variant="secondary" onClick={onClose}>Close</Btn>
+        <Btn icon={<Pencil size={16} />} onClick={() => onEdit(user)}>Edit</Btn>
+      </>
+    }>
+      <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+        {rows.map(([k, v]) => (
+          <div key={k}>
+            <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">{k}</dt>
+            <dd className="mt-0.5 break-words text-sm text-slate-800">{v}</dd>
+          </div>
+        ))}
+      </dl>
+      {patientRows.length > 0 && (
+        <>
+          <h3 className="mb-3 mt-6 border-t border-slate-100 pt-5 text-sm font-semibold text-slate-900">Patient record</h3>
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+            {patientRows.map(([k, v]) => (
+              <div key={k}>
+                <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">{k}</dt>
+                <dd className="mt-0.5 text-sm text-slate-800">{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </>
+      )}
+    </Modal>
+  );
+}
 
+type ResetProps = { user: UserProfile | null; onClose: () => void; onSubmit: (id: string, pw: string) => Promise<void> };
+
+function ResetPasswordModal(props: ResetProps) {
+  if (!props.user) return null;
+  return <ResetPasswordForm key={props.user.id} {...props} />;
+}
+
+function ResetPasswordForm({ user, onClose, onSubmit }: ResetProps) {
+  const [pw, setPw] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [err, setErr] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const generate = () => {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+    const bytes = crypto.getRandomValues(new Uint32Array(12));
+    const value = Array.from(bytes, (b) => chars[b % chars.length]).join("");
+    setPw(value);
+    setConfirm(value);
+    navigator.clipboard?.writeText(value).then(() => toast.info("Generated password copied to clipboard")).catch(() => {});
+  };
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (pw.length < 8) return setErr("Password must be at least 8 characters");
+    if (pw !== confirm) return setErr("Passwords do not match");
+    if (!user) return;
+    setSaving(true);
+    try {
+      await onSubmit(user.id, pw);
+      toast.success(`Password updated for ${user.name}`);
+      onClose();
+    } catch (error) {
+      setErr(errorMessage(error, "Could not reset password"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Modal open={!!user} onClose={onClose} size="sm" title="Reset password" description={user?.email} footer={
+      <>
+        <Btn variant="secondary" onClick={onClose} disabled={saving}>Cancel</Btn>
+        <Btn type="submit" form="reset-form" loading={saving}>Update password</Btn>
+      </>
+    }>
+      <form id="reset-form" onSubmit={submit} className="space-y-4">
+        <Field label="New password" error={err}>
+          {(id) => <TextInput id={id} type="text" autoComplete="new-password" value={pw} onChange={(e) => { setPw(e.target.value); setErr(""); }} />}
+        </Field>
+        <Field label="Confirm password">
+          {(id) => <TextInput id={id} type="text" autoComplete="new-password" value={confirm} onChange={(e) => { setConfirm(e.target.value); setErr(""); }} />}
+        </Field>
+        <button type="button" onClick={generate} className="text-sm font-medium text-indigo-600 hover:text-indigo-700">
+          Generate a strong password
+        </button>
+        <p className="text-xs text-slate-500">Share the new password with the user through a secure channel.</p>
+      </form>
+    </Modal>
+  );
+}
