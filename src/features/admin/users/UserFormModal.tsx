@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from "react";
+import { Globe } from "lucide-react";
 import { Modal, Btn, Field, TextInput, SelectInput } from "../components/ui";
 import { useUserStore, accountTypeOf, type AccountType, type UserProfile, type UserPayload } from "../../../store/useUserStore";
 import { toast } from "../lib/useToastStore";
@@ -43,10 +44,15 @@ function UserForm({ open, onClose, user, defaultRole = "student", lockRole }: Pr
     department: p0.department || "",
     age: p0.age != null ? String(p0.age) : "",
   } : emptyPatient);
+  const [publish, setPublish] = useState(true);
+  const [designation, setDesignation] = useState("");
+  const [contact, setContact] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   const isPatient = PATIENT_TYPES.includes(role);
+  // New doctor accounts are listed on the public Doctors page by default.
+  const showDirectory = !user && role === "doctor";
 
   const validate = () => {
     const e: Record<string, string> = {};
@@ -69,6 +75,7 @@ function UserForm({ open, onClose, user, defaultRole = "student", lockRole }: Pr
       role,
       ...(password ? { password } : {}),
       ...(isPatient ? { patientData: patient } : {}),
+      ...(showDirectory ? { directoryListing: { publish, designation: designation.trim(), contact: contact.trim() } } : {}),
     };
     try {
       if (user) {
@@ -77,6 +84,7 @@ function UserForm({ open, onClose, user, defaultRole = "student", lockRole }: Pr
       } else {
         const created = await addUser(payload);
         if (created.warning) toast.info(created.warning);
+        else if (created.directoryEntry) toast.success(`${payload.name} created and listed on the public Doctors page`);
         else toast.success(`${payload.name} created as ${ROLE_LABELS[role]}`);
       }
       onClose();
@@ -135,6 +143,37 @@ function UserForm({ open, onClose, user, defaultRole = "student", lockRole }: Pr
             {(id) => <TextInput id={id} type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} />}
           </Field>
         </div>
+
+        {showDirectory && (
+          <div className="border-t border-slate-100 pt-5">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                checked={publish}
+                onChange={(e) => setPublish(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span>
+                <span className="flex items-center gap-1.5 text-sm font-semibold text-slate-900">
+                  <Globe size={14} className="text-slate-400" /> List on the public website
+                </span>
+                <span className="block text-xs text-slate-500">
+                  Adds this doctor to the Doctors page and the public directory. You can edit or remove the listing later.
+                </span>
+              </span>
+            </label>
+            {publish && (
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field label="Designation" hint="Defaults to Medical Officer">
+                  {(id) => <TextInput id={id} value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. Senior Medical Officer" />}
+                </Field>
+                <Field label="Public phone">
+                  {(id) => <TextInput id={id} type="tel" value={contact} onChange={(e) => setContact(e.target.value)} placeholder="01XXXXXXXXX" />}
+                </Field>
+              </div>
+            )}
+          </div>
+        )}
 
         {isPatient && (
           <div>

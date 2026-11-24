@@ -46,6 +46,12 @@ export interface UserPayload {
     department?: string;
     age?: string;
   };
+  /** Doctors only: public website directory listing created with the account. */
+  directoryListing?: {
+    publish: boolean;
+    designation?: string;
+    contact?: string;
+  };
 }
 
 interface UserState {
@@ -54,7 +60,7 @@ interface UserState {
   error: string | null;
   fetchUsers: (role?: string) => Promise<void>;
   getDoctors: () => UserProfile[];
-  addUser: (userData: UserPayload) => Promise<UserProfile & { warning?: string }>;
+  addUser: (userData: UserPayload) => Promise<UserProfile & { warning?: string; directoryEntry?: { id: string | number } }>;
   updateUser: (id: string, userData: Partial<UserPayload>) => Promise<void>;
   setUserStatus: (id: string, active: boolean) => Promise<void>;
   resetPassword: (id: string, password: string) => Promise<void>;
@@ -85,7 +91,7 @@ export const useUserStore = create<UserState>()((set, get) => ({
   getDoctors: () => get().users.filter(u => u.role === 'doctor'),
 
   addUser: async (userData) => {
-    const created = await apiRequest<UserProfile & { warning?: string }>('/users', { method: 'POST', json: userData });
+    const created = await apiRequest<UserProfile & { warning?: string; directoryEntry?: { id: string | number } }>('/users', { method: 'POST', json: userData });
     set((state) => ({
       users: [...state.users, created].sort((a, b) => a.name.localeCompare(b.name)),
     }));
