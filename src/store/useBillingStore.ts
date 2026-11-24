@@ -28,7 +28,7 @@ interface BillingState {
   loading: boolean;
   fetchBills: () => Promise<void>;
   addBill: (bill: Omit<Bill, 'id' | 'date'>) => Promise<Bill | null>;
-  updateBillStatus: (id: string, status: "Paid" | "Due") => Promise<void>;
+  updateBillStatus: (id: string, status: "Paid" | "Due") => Promise<boolean>;
   getBillsByPatient: (patientId: string) => Bill[];
 }
 
@@ -87,9 +87,12 @@ export const useBillingStore = create<BillingState>()((set, get) => ({
         set((state) => ({
           bills: state.bills.map((b) => (b.id === id ? updated : b))
         }));
+        return true;
       }
+      return false;
     } catch (error) {
       console.error("Error updating bill:", error);
+      return false;
     }
   },
 

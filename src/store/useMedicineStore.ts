@@ -1,5 +1,5 @@
-import { fetchAuth } from '../lib/fetchAuth';
 import { create } from 'zustand';
+import { apiRequest } from '../features/admin/lib/adminApi';
 
 export interface Medicine {
   id: string;
@@ -7,68 +7,59 @@ export interface Medicine {
   stock: number;
 }
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+export const LOW_STOCK_THRESHOLD = 10;
 
 interface MedicineState {
   medicines: Medicine[];
   loading: boolean;
+  error: string | null;
   fetchMedicines: () => Promise<void>;
   updateStock: (id: string, newStock: number) => Promise<void>;
+  updateMedicine: (id: string, patch: Partial<Pick<Medicine, 'name' | 'stock'>>) => Promise<void>;
+  adjustStock: (id: string, delta: number) => Promise<void>;
   addMedicine: (name: string, stock: number) => Promise<void>;
+  deleteMedicine: (id: string) => Promise<void>;
 }
 
-export const useMedicineStore = create<MedicineState>()((set) => ({
+const sortByName = (list: Medicine[]) => [...list].sort((a, b) => a.name.localeCompare(b.name));
+
+export const useMedicineStore = create<MedicineState>()((set, get) => ({
   medicines: [],
   loading: false,
+  error: null,
 
   fetchMedicines: async () => {
-    set({ loading: true });
+    set({ loading: true, error: null });
     try {
-      const response = await fetchAuth(`${API_URL}/medicines`);
-      if (response.ok) {
-        const data = await response.json();
-        set({ medicines: data });
-      }
+      const data = await apiRequest<Medicine[]>('/medicines');
+      set({ medicines: data || [] });
     } catch (error) {
       console.error("Error fetching medicines:", error);
+      set({ error: error instanceof Error ? error.message : 'Failed to load medicines' });
     } finally {
       set({ loading: false });
     }
   },
 
-  updateStock: async (id: string, newStock: number) => {
-    try {
-      const response = await fetchAuth(`${API_URL}/medicines/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ stock: newStock })
-      });
-      if (response.ok) {
-        const updated = await response.json();
-        set(state => ({
-          medicines: state.medicines.map(m => m.id === id ? updated : m)
-        }));
-      }
-    } catch (error) {
-      console.error("Error updating stock:", error);
-    }
+  updateStock: async (id, newStock) => get().updateMedicine(id, { stock: newStock }),
+
+  updateMedicine: async (id, patch) => {
+    const updated = await apiRequest<Medicine>(`/medicines/${id}`, { method: 'PUT', json: patch });
+    set(state => ({ medicines: sortByName(state.medicines.map(m => (m.id === id ? { ...m, ...updated } : m))) }));
   },
 
-  addMedicine: async (name: string, stock: number) => {
-    try {
-      const response = await fetchAuth(`${API_URL}/medicines`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, stock })
-      });
-      if (response.ok) {
-        const added = await response.json();
-        set(state => ({
-          medicines: [...state.medicines, added].sort((a, b) => a.name.localeCompare(b.name))
-        }));
-      }
-    } catch (error) {
-      console.error("Error adding medicine:", error);
-    }
-  }
+  adjustStock: async (id, delta) => {
+    const updated = await apiRequest<Medicine>(`/medicines/${id}/adjust`, { method: 'PATCH', json: { delta } });
+    set(state => ({ medicines: state.medicines.map(m => (m.id === id ? updated : m)) }));
+  },
+
+  addMedicine: async (name, stock) => {
+    const added = await apiRequest<Medicine>('/medicines', { method: 'POST', json: { name, stock } });
+    set(state => ({ medicines: sortByName([...state.medicines, added]) }));
+  },
+
+  deleteMedicine: async (id) => {
+    await apiRequest(`/medicines/${id}`, { method: 'DELETE' });
+    set(state => ({ medicines: state.medicines.filter(m => m.id !== id) }));
+  },
 }));
